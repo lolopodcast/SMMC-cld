@@ -1,0 +1,2342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMMC Interactive Learning Platform</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bcg-green: #004d40;
+            --bcg-green-dark: #00251a;
+            --bcg-green-light: #00695c;
+            --bcg-accent: #00bfa5;
+            --slate-gray: #37474f;
+            --slate-light: #546e7a;
+            --dark-bg: #0a1929;
+            --dark-surface: #1a2332;
+            --light-bg: #fafafa;
+            --light-surface: #ffffff;
+            --accent: #00bfa5;
+            --text-light: #eceff1;
+            --text-dark: #263238;
+            --border-subtle: #cfd8dc;
+        }
+        
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-top: 80px;
+            padding-bottom: 60px;
+            transition: background-color 0.3s ease;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        .display-font {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .highlighted-text {
+            background: linear-gradient(120deg, var(--accent) 0%, var(--accent) 100%);
+            background-repeat: no-repeat;
+            background-size: 100% 40%;
+            background-position: 0 85%;
+            transition: background-size 0.3s ease;
+        }
+        
+        .flip-card {
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+        
+        .gradient-border {
+            position: relative;
+        }
+        
+        .gradient-border::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 2px;
+            background: linear-gradient(135deg, var(--bcg-green), var(--bcg-accent));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+        
+        .bcg-card {
+            border-left: 4px solid var(--bcg-accent);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+        }
+        
+        .bcg-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.20);
+        }
+        
+        header {
+            position: fixed !important;
+            top: 0 !important;
+            z-index: 1000 !important;
+            width: 100%;
+            transition: background-color 0.3s ease !important;
+        }
+        
+        footer {
+            position: relative !important;
+            bottom: auto !important;
+            width: 100%;
+            margin-top: 4rem;
+        }
+        
+        /* Sidebar below header */
+        aside {
+            z-index: 900 !important;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        
+        .stagger-1 { animation-delay: 0.1s; }
+        .stagger-2 { animation-delay: 0.2s; }
+        .stagger-3 { animation-delay: 0.3s; }
+        .stagger-4 { animation-delay: 0.4s; }
+        
+        .quiz-option {
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-option:hover {
+            transform: translateX(8px);
+        }
+        
+        .quiz-option.correct {
+            background: #10b981 !important;
+            border-color: #10b981 !important;
+        }
+        
+        .quiz-option.incorrect {
+            background: #ef4444 !important;
+            border-color: #ef4444 !important;
+        }
+        
+        .progress-bar {
+            transition: width 0.5s ease;
+        }
+        
+        .glossary-item {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .reading-highlight {
+            background: rgba(16, 185, 129, 0.3);
+            transition: background 0.3s ease;
+        }
+        
+        .scroll-smooth {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="scroll-smooth">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Course Data Structure
+        const courseData = {
+            en: {
+                topics: [
+                    {
+                        id: 1,
+                        title: "The Basics of Strategy & Corporate Governance",
+                        icon: "🌐",
+                        keyInsight: "Superior performance stems from sustainable competitive advantages, not luck or industry effects.",
+                        tabs: [
+                            {
+                                id: "overview",
+                                name: "Overview",
+                                content: {
+                                    executiveSummary: {
+                                        title: "Executive Summary",
+                                        points: [
+                                            "Strategy is the quest for superior performance through sustainable competitive advantage.",
+                                            "Corporate strategy addresses where to compete; business strategy addresses how to compete.",
+                                            "Effective corporate governance aligns management decisions with stakeholder interests."
+                                        ],
+                                        learningObjectives: [
+                                            "Distinguish between corporate and business strategy",
+                                            "Understand stakeholder theory and agency problems",
+                                            "Analyze corporate governance mechanisms"
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                id: "core-concepts",
+                                name: "Core Concepts",
+                                content: {
+                                    sections: [
+                                        {
+                                            title: "What is Strategy?",
+                                            content: "Strategy is the quest for superior performance. It involves creating and capturing value through a unique positioning that is difficult for competitors to replicate. Superior performance comes from three sources: industry effects (10%), firm effects (45%), and luck/year effects (45%).",
+                                            glossary: [
+                                                { term: "Superior Performance", definition: "Achieving returns above the industry average through sustainable competitive advantages rather than temporary market conditions or luck." },
+                                                { term: "Industry Effects", definition: "Performance variations attributable to the structural characteristics of the industry a firm operates in." },
+                                                { term: "Firm Effects", definition: "Performance differences driven by firm-specific resources, capabilities, and strategic choices." }
+                                            ],
+                                            practicalLinks: [
+                                                { 
+                                                    title: "Apple's Strategic Evolution", 
+                                                    url: "https://hbr.org/2020/08/how-apple-is-organized-for-innovation", 
+                                                    source: "Harvard Business Review",
+                                                    type: "article"
+                                                },
+                                                { 
+                                                    title: "Netflix Strategy Explained (Video)", 
+                                                    url: "https://www.youtube.com/watch?v=qjYg2pczW_8", 
+                                                    source: "YouTube - CNBC",
+                                                    type: "video"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            title: "Corporate vs. Business Strategy",
+                                            content: "Corporate strategy addresses WHERE to compete - which industries, markets, and businesses to participate in. Business strategy addresses HOW to compete - the specific approach to achieve competitive advantage within a chosen market.",
+                                            glossary: [
+                                                { term: "Corporate Strategy", definition: "Top-level strategy determining the scope of the firm across multiple businesses and markets." },
+                                                { term: "Business Strategy", definition: "Competitive strategy for a specific business unit or market segment." },
+                                                { term: "Competitive Advantage", definition: "A firm's ability to outperform rivals through superior value creation or cost efficiency." }
+                                            ],
+                                            practicalLinks: [
+                                                { 
+                                                    title: "Amazon's Diversification Strategy", 
+                                                    url: "https://www.mckinsey.com/capabilities/strategy-and-corporate-finance/our-insights/the-strategic-yardstick-you-cant-afford-to-ignore", 
+                                                    source: "McKinsey",
+                                                    type: "article"
+                                                },
+                                                { 
+                                                    title: "Tesla's Vertical Integration Explained (Video)", 
+                                                    url: "https://www.youtube.com/watch?v=h970ER3i-uI", 
+                                                    source: "YouTube - Economics Explained",
+                                                    type: "video"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            title: "Stakeholder Theory & Agency Problems",
+                                            content: "Firms must balance the interests of multiple stakeholders: shareholders, employees, customers, suppliers, communities, and governments. Agency problems arise when managers' interests diverge from those of shareholders, potentially leading to suboptimal decisions.",
+                                            glossary: [
+                                                { term: "Stakeholder", definition: "Any individual or group that can affect or is affected by the achievement of the organization's objectives." },
+                                                { term: "Agency Problem", definition: "Conflict of interest between principals (owners) and agents (managers) when the agent may not act in the principal's best interest." },
+                                                { term: "Principal-Agent Theory", definition: "Framework examining how to structure relationships and contracts when one party delegates work to another who has different interests." }
+                                            ],
+                                            practicalLinks: [
+                                                { 
+                                                    title: "Boeing 737 MAX: Corporate Governance Lessons (Podcast)", 
+                                                    url: "https://www.npr.org/2020/01/10/795366871/boeings-737-max-a-case-study-in-corporate-missteps", 
+                                                    source: "NPR Planet Money",
+                                                    type: "podcast"
+                                                },
+                                                { 
+                                                    title: "Patagonia's Stakeholder Capitalism (Video)", 
+                                                    url: "https://www.youtube.com/watch?v=fuzmWSDIEhE", 
+                                                    source: "YouTube - Bloomberg",
+                                                    type: "video"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            title: "Corporate Governance Mechanisms",
+                                            content: "Corporate governance includes both internal mechanisms (board of directors, executive compensation, ownership structure) and external mechanisms (market for corporate control, legal/regulatory framework, product market competition) to align management with stakeholder interests.",
+                                            glossary: [
+                                                { term: "Board of Directors", definition: "Group of individuals elected to represent shareholders and oversee management activities." },
+                                                { term: "Executive Compensation", definition: "Pay packages designed to align manager incentives with shareholder value creation." },
+                                                { term: "Market for Corporate Control", definition: "Mechanism whereby underperforming firms become takeover targets, disciplining management." }
+                                            ],
+                                            practicalLinks: [
+                                                { 
+                                                    title: "WeWork Governance Collapse: Case Study", 
+                                                    url: "https://www.wsj.com/articles/the-money-men-who-enabled-adam-neumanns-wework-dream-11573727654", 
+                                                    source: "Wall Street Journal",
+                                                    type: "article"
+                                                },
+                                                { 
+                                                    title: "How Microsoft's Board Works (Video)", 
+                                                    url: "https://www.youtube.com/watch?v=zKbfMq0cXNA", 
+                                                    source: "YouTube - Microsoft",
+                                                    type: "video"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                id: "flip-cards",
+                                name: "Flip Cards",
+                                content: {
+                                    cards: [
+                                        { front: "What drives superior performance?", back: "45% firm effects + 10% industry effects + 45% luck/year. Strategy focuses on maximizing firm effects through sustainable competitive advantages." },
+                                        { front: "Corporate vs. Business Strategy?", back: "Corporate strategy = WHERE to compete (which businesses/markets). Business strategy = HOW to compete (approach to win in chosen markets)." },
+                                        { front: "What is an agency problem?", back: "Conflict when managers' interests diverge from shareholders', potentially leading to decisions that benefit management over owners." },
+                                        { front: "Name 3 internal governance mechanisms", back: "Board of directors, executive compensation structures, and ownership concentration/structure." },
+                                        { front: "Name 3 external governance mechanisms", back: "Market for corporate control (takeovers), legal/regulatory framework, and product market competition." }
+                                    ]
+                                }
+                            },
+                            {
+                                id: "quiz",
+                                name: "Quiz",
+                                content: {
+                                    questions: [
+                                        {
+                                            question: "What percentage of firm performance is attributed to firm-specific effects?",
+                                            options: ["10%", "25%", "45%", "60%"],
+                                            correct: 2
+                                        },
+                                        {
+                                            question: "Which addresses 'where to compete'?",
+                                            options: ["Business strategy", "Corporate strategy", "Functional strategy", "Operational strategy"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "What is the primary agency problem?",
+                                            options: ["High costs", "Manager-shareholder interest misalignment", "Market competition", "Regulatory compliance"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "Which is an internal governance mechanism?",
+                                            options: ["Takeover market", "Board of directors", "Product competition", "Regulations"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "Stakeholder theory suggests firms should:",
+                                            options: ["Maximize only shareholder value", "Balance multiple stakeholder interests", "Ignore external pressures", "Focus solely on profits"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "Superior performance primarily comes from:",
+                                            options: ["Luck alone", "Industry selection only", "Sustainable competitive advantages", "Market timing"],
+                                            correct: 2
+                                        },
+                                        {
+                                            question: "Executive compensation aims to:",
+                                            options: ["Maximize manager wealth", "Align manager-shareholder interests", "Reduce costs", "Increase complexity"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "Which is an external governance mechanism?",
+                                            options: ["Ownership structure", "Executive pay", "Market for corporate control", "Internal audit"],
+                                            correct: 2
+                                        },
+                                        {
+                                            question: "Business strategy focuses on:",
+                                            options: ["Portfolio management", "How to compete in specific markets", "Which industries to enter", "Capital allocation"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "The weakest driver of performance is:",
+                                            options: ["Firm effects", "Industry effects", "Strategic choices", "Management quality"],
+                                            correct: 1
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        id: 2,
+                        title: "Value-Price-Cost Framework & Business Model",
+                        icon: "💰",
+                        keyInsight: "Value creation and capture require understanding the relationships between customer value, pricing power, and cost structure.",
+                        tabs: [
+                            {
+                                id: "overview",
+                                name: "Overview",
+                                content: {
+                                    executiveSummary: {
+                                        title: "Executive Summary",
+                                        points: [
+                                            "The V-P-C framework decomposes firm performance into value creation and value appropriation.",
+                                            "Customer willingness-to-pay (WTP) determines maximum value; cost determines minimum efficiency.",
+                                            "Business models articulate how firms create, deliver, and capture value."
+                                        ],
+                                        learningObjectives: [
+                                            "Apply the Value-Price-Cost framework to analyze firm performance",
+                                            "Understand the relationship between value creation and appropriation",
+                                            "Map business models using the Business Model Canvas"
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                id: "core-concepts",
+                                name: "Core Concepts",
+                                content: {
+                                    sections: [
+                                        {
+                                            title: "Understanding Firm Performance",
+                                            content: "Firm performance has two dimensions: accounting performance (profitability ratios like ROA, ROE) and shareholder value (market-based measures like Tobin's q and economic value added). These metrics assess how effectively firms convert resources into profits and shareholder returns.",
+                                            glossary: [
+                                                { term: "ROA (Return on Assets)", definition: "Net income divided by total assets, measuring how efficiently a firm uses its assets to generate profit." },
+                                                { term: "ROE (Return on Equity)", definition: "Net income divided by shareholder equity, indicating returns generated on shareholder investments." },
+                                                { term: "Tobin's q", definition: "Market value of firm divided by replacement cost of assets, indicating market perception of firm quality." }
+                                            ],
+                                            practicalLinks: [
+                                                { 
+                                                    title: "Understanding ROE vs ROA (Video)", 
+                                                    url: "https://www.youtube.com/watch?v=n733V-gEemo", 
+                                                    source: "YouTube - The Plain Bagel",
+                                                    type: "video"
+                                                },
+                                                { 
+                                                    title: "Warren Buffett on Financial Metrics (Podcast)", 
+                                                    url: "https://www.berkshirehathaway.com/letters/2023ltr.pdf", 
+                                                    source: "Berkshire Annual Letter",
+                                                    type: "article"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            title: "The V-P-C Framework",
+                                            content: "The Value-Price-Cost framework provides a comprehensive view of how firms create and capture value. Value (V) represents customer willingness-to-pay, Price (P) is what customers actually pay, and Cost (C) represents the firm's total costs. Consumer surplus = V - P, while producer surplus (profit) = P - C. Total value created = V - C.",
+                                            glossary: [
+                                                { term: "Willingness-to-Pay (WTP)", definition: "Maximum amount a customer is willing to pay for a product or service, representing perceived value." },
+                                                { term: "Consumer Surplus", definition: "The difference between what consumers are willing to pay and what they actually pay (V - P)." },
+                                                { term: "Producer Surplus", definition: "The difference between price received and cost incurred (P - C), representing firm profit." },
+                                                { term: "Value Creation", definition: "The total economic value generated, measured as V - C." }
+                                            ],
+                                            practicalLinks: [
+                                                { 
+                                                    title: "Costco's Business Model Deep Dive (Video)", 
+                                                    url: "https://www.youtube.com/watch?v=6fhQPPjV96g", 
+                                                    source: "YouTube - Company Man",
+                                                    type: "video"
+                                                },
+                                                { 
+                                                    title: "Luxury Pricing Power: LVMH Case", 
+                                                    url: "https://www.businessoffashion.com/articles/luxury/lvmh-earnings-resilience-luxury-market/", 
+                                                    source: "Business of Fashion",
+                                                    type: "article"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            title: "Value Creation vs. Value Appropriation",
+                                            content: "Value creation increases the total pie (V - C) through innovation, quality improvements, or cost reductions. Value appropriation (or value capture) determines how this pie is divided between customers (consumer surplus) and firms (producer surplus). Sustainable competitive advantage requires both creating more value AND capturing a larger share.",
+                                            glossary: [
+                                                { term: "Value Creation", definition: "Expanding total economic value by increasing WTP or reducing costs." },
+                                                { term: "Value Appropriation", definition: "Capturing a larger share of created value through pricing power, bargaining, or competitive positioning." },
+                                                { term: "Bargaining Power", definition: "Ability to negotiate favorable terms in transactions, affecting value distribution." }
+                                            ],
+                                            practicalLinks: [
+                                                { 
+                                                    title: "IKEA's Blue Ocean Strategy (Video)", 
+                                                    url: "https://www.youtube.com/watch?v=sdG8HXDWeX0", 
+                                                    source: "YouTube - Business Casual",
+                                                    type: "video"
+                                                },
+                                                { 
+                                                    title: "E-commerce Price Wars (Podcast)", 
+                                                    url: "https://www.npr.org/2023/07/21/1189396423/amazon-walmart-price-competition", 
+                                                    source: "NPR Marketplace",
+                                                    type: "podcast"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            title: "Business Model Canvas",
+                                            content: "The Business Model Canvas maps how organizations create, deliver, and capture value across nine building blocks: customer segments, value propositions, channels, customer relationships, revenue streams, key resources, key activities, key partnerships, and cost structure. This framework helps visualize the interconnected elements of a business model.",
+                                            glossary: [
+                                                { term: "Value Proposition", definition: "Bundle of products and services that create value for a specific customer segment." },
+                                                { term: "Customer Segments", definition: "Different groups of people or organizations a business aims to reach and serve." },
+                                                { term: "Revenue Streams", definition: "Ways a business generates cash from each customer segment." },
+                                                { term: "Key Resources", definition: "Most important assets required to make a business model work." }
+                                            ],
+                                            practicalLinks: [
+                                                { 
+                                                    title: "Airbnb Business Model Explained (Video)", 
+                                                    url: "https://www.youtube.com/watch?v=E1-H9iYWFDQ", 
+                                                    source: "YouTube - CNBC",
+                                                    type: "video"
+                                                },
+                                                { 
+                                                    title: "Spotify's Freemium Strategy Podcast", 
+                                                    url: "https://open.spotify.com/episode/7AHPYjAzXtZfcfKxkWEWpM", 
+                                                    source: "How I Built This",
+                                                    type: "podcast"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                id: "flip-cards",
+                                name: "Flip Cards",
+                                content: {
+                                    cards: [
+                                        { front: "What is the V-P-C framework?", back: "Value (customer WTP), Price (actual payment), Cost (firm expense). Measures value creation (V-C) and appropriation (how V-C splits between consumer and producer surplus)." },
+                                        { front: "Consumer surplus formula?", back: "Consumer Surplus = V - P (What customers gain: their willingness-to-pay minus what they actually pay)" },
+                                        { front: "Producer surplus formula?", back: "Producer Surplus = P - C (Firm profit: price received minus costs incurred)" },
+                                        { front: "Total value created formula?", back: "Total Value Created = V - C (Maximum economic value generated by the transaction)" },
+                                        { front: "ROA vs ROE difference?", back: "ROA = Net Income / Total Assets (asset efficiency). ROE = Net Income / Equity (return to shareholders). ROE accounts for leverage." },
+                                        { front: "Nine blocks of Business Model Canvas?", back: "Customer segments, value proposition, channels, customer relationships, revenue streams, key resources, key activities, key partnerships, cost structure." }
+                                    ]
+                                }
+                            },
+                            {
+                                id: "quiz",
+                                name: "Quiz",
+                                content: {
+                                    questions: [
+                                        {
+                                            question: "What does 'V' represent in the V-P-C framework?",
+                                            options: ["Variable cost", "Customer willingness-to-pay", "Value appropriation", "Vendor price"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "Consumer surplus is calculated as:",
+                                            options: ["P - C", "V - C", "V - P", "C - V"],
+                                            correct: 2
+                                        },
+                                        {
+                                            question: "Total value created equals:",
+                                            options: ["P - C", "V - P", "V - C", "P + C"],
+                                            correct: 2
+                                        },
+                                        {
+                                            question: "Producer surplus represents:",
+                                            options: ["Customer benefit", "Firm profit", "Total value", "Market size"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "ROA measures:",
+                                            options: ["Market value", "Asset efficiency", "Equity returns", "Sales growth"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "Value appropriation refers to:",
+                                            options: ["Creating more value", "Reducing costs", "Capturing created value", "Increasing production"],
+                                            correct: 2
+                                        },
+                                        {
+                                            question: "Which is NOT part of Business Model Canvas?",
+                                            options: ["Value proposition", "Customer segments", "Competitive advantage", "Revenue streams"],
+                                            correct: 2
+                                        },
+                                        {
+                                            question: "Tobin's q compares:",
+                                            options: ["Revenue to costs", "Market value to asset replacement cost", "Profit to sales", "Debt to equity"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "To increase value creation, firms can:",
+                                            options: ["Only raise prices", "Increase WTP or reduce costs", "Only cut costs", "Only improve quality"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "Key resources in Business Model Canvas include:",
+                                            options: ["Only financial assets", "Physical, intellectual, human, and financial assets", "Only human resources", "Only technology"],
+                                            correct: 1
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            zh: {
+                topics: [
+                    {
+                        id: 1,
+                        title: "策略基礎與公司治理",
+                        icon: "🌐",
+                        keyInsight: "卓越績效源於可持續的競爭優勢，而非運氣或產業效應。",
+                        tabs: [
+                            {
+                                id: "overview",
+                                name: "總覽",
+                                content: {
+                                    executiveSummary: {
+                                        title: "執行摘要",
+                                        points: [
+                                            "策略是透過可持續競爭優勢追求卓越績效的過程。",
+                                            "企業策略處理「在哪競爭」；事業策略處理「如何競爭」。",
+                                            "有效的公司治理使管理決策與利害關係人利益一致。"
+                                        ],
+                                        learningObjectives: [
+                                            "區分企業策略與事業策略",
+                                            "理解利害關係人理論與代理問題",
+                                            "分析公司治理機制"
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                id: "core-concepts",
+                                name: "核心概念",
+                                content: {
+                                    sections: [
+                                        {
+                                            title: "何謂策略？",
+                                            content: "策略是追求卓越績效的過程。它涉及透過獨特定位創造和擷取價值，且這種定位難以被競爭者複製。卓越績效來自三個來源：產業效應（10%）、企業效應（45%）和運氣／年度效應（45%）。",
+                                            glossary: [
+                                                { term: "卓越績效", definition: "透過可持續競爭優勢而非暫時市場條件或運氣，達到高於產業平均的回報。" },
+                                                { term: "產業效應", definition: "歸因於企業所處產業結構特徵的績效差異。" },
+                                                { term: "企業效應", definition: "由企業特定資源、能力和策略選擇驅動的績效差異。" }
+                                            ],
+                                            practicalLinks: [
+                                                { 
+                                                    title: "蘋果的策略演進", 
+                                                    url: "https://hbr.org/2020/08/how-apple-is-organized-for-innovation", 
+                                                    source: "哈佛商業評論",
+                                                    type: "article"
+                                                },
+                                                { 
+                                                    title: "Netflix 策略解析 (影片)", 
+                                                    url: "https://www.youtube.com/watch?v=qjYg2pczW_8", 
+                                                    source: "YouTube - CNBC",
+                                                    type: "video"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            title: "企業策略與事業策略",
+                                            content: "企業策略處理「在哪競爭」－參與哪些產業、市場和事業。事業策略處理「如何競爭」－在選定市場中達成競爭優勢的具體方法。",
+                                            glossary: [
+                                                { term: "企業策略", definition: "決定企業在多個事業和市場範疇的最高層級策略。" },
+                                                { term: "事業策略", definition: "針對特定事業單位或市場區隔的競爭策略。" },
+                                                { term: "競爭優勢", definition: "企業透過卓越價值創造或成本效率超越對手的能力。" }
+                                            ],
+                                            practicalLinks: [
+                                                { 
+                                                    title: "亞馬遜的多角化策略", 
+                                                    url: "https://www.mckinsey.com/capabilities/strategy-and-corporate-finance/our-insights/the-strategic-yardstick-you-cant-afford-to-ignore", 
+                                                    source: "麥肯錫",
+                                                    type: "article"
+                                                },
+                                                { 
+                                                    title: "特斯拉垂直整合解析 (影片)", 
+                                                    url: "https://www.youtube.com/watch?v=h970ER3i-uI", 
+                                                    source: "YouTube - Economics Explained",
+                                                    type: "video"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            title: "利害關係人理論與代理問題",
+                                            content: "企業必須平衡多個利害關係人的利益：股東、員工、顧客、供應商、社區和政府。當經理人利益與股東利益分歧時，會產生代理問題，可能導致次優決策。",
+                                            glossary: [
+                                                { term: "利害關係人", definition: "能影響或被組織目標達成所影響的任何個人或群體。" },
+                                                { term: "代理問題", definition: "當代理人（經理人）可能不依委託人（所有者）最佳利益行事時，兩者間的利益衝突。" },
+                                                { term: "委託代理理論", definition: "檢視當一方將工作委託給具有不同利益的另一方時，如何建構關係和契約的架構。" }
+                                            ],
+                                            practicalLinks: [
+                                                { 
+                                                    title: "波音 737 MAX：公司治理教訓 (播客)", 
+                                                    url: "https://www.npr.org/2020/01/10/795366871/boeings-737-max-a-case-study-in-corporate-missteps", 
+                                                    source: "NPR Planet Money",
+                                                    type: "podcast"
+                                                },
+                                                { 
+                                                    title: "Patagonia 的利害關係人資本主義 (影片)", 
+                                                    url: "https://www.youtube.com/watch?v=fuzmWSDIEhE", 
+                                                    source: "YouTube - Bloomberg",
+                                                    type: "video"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            title: "公司治理機制",
+                                            content: "公司治理包括內部機制（董事會、高階主管薪酬、所有權結構）和外部機制（企業控制權市場、法律／監管架構、產品市場競爭），以使管理與利害關係人利益一致。",
+                                            glossary: [
+                                                { term: "董事會", definition: "由選出的個人組成的團體，代表股東並監督管理活動。" },
+                                                { term: "高階主管薪酬", definition: "設計用來使經理人激勵與股東價值創造一致的薪酬方案。" },
+                                                { term: "企業控制權市場", definition: "績效不佳的企業成為收購目標的機制，以約束管理階層。" }
+                                            ],
+                                            practicalLinks: [
+                                                { 
+                                                    title: "WeWork 治理崩潰：個案研究", 
+                                                    url: "https://www.wsj.com/articles/the-money-men-who-enabled-adam-neumanns-wework-dream-11573727654", 
+                                                    source: "華爾街日報",
+                                                    type: "article"
+                                                },
+                                                { 
+                                                    title: "微軟董事會運作方式 (影片)", 
+                                                    url: "https://www.youtube.com/watch?v=zKbfMq0cXNA", 
+                                                    source: "YouTube - Microsoft",
+                                                    type: "video"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                id: "flip-cards",
+                                name: "翻轉卡",
+                                content: {
+                                    cards: [
+                                        { front: "是什麼驅動卓越績效？", back: "45% 企業效應 + 10% 產業效應 + 45% 運氣／年度效應。策略專注於透過可持續競爭優勢最大化企業效應。" },
+                                        { front: "企業策略與事業策略？", back: "企業策略 = 在哪競爭（哪些事業／市場）。事業策略 = 如何競爭（在選定市場中獲勝的方法）。" },
+                                        { front: "何謂代理問題？", back: "當經理人利益與股東利益分歧時的衝突，可能導致有利於管理階層而非所有者的決策。" },
+                                        { front: "列出3個內部治理機制", back: "董事會、高階主管薪酬結構、所有權集中度／結構。" },
+                                        { front: "列出3個外部治理機制", back: "企業控制權市場（收購）、法律／監管架構、產品市場競爭。" }
+                                    ]
+                                }
+                            },
+                            {
+                                id: "quiz",
+                                name: "測驗",
+                                content: {
+                                    questions: [
+                                        {
+                                            question: "企業特定效應對企業績效的貢獻比例為何？",
+                                            options: ["10%", "25%", "45%", "60%"],
+                                            correct: 2
+                                        },
+                                        {
+                                            question: "何者處理「在哪競爭」？",
+                                            options: ["事業策略", "企業策略", "功能性策略", "營運策略"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "主要的代理問題是什麼？",
+                                            options: ["高成本", "經理人-股東利益不一致", "市場競爭", "法規遵循"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "何者是內部治理機制？",
+                                            options: ["收購市場", "董事會", "產品競爭", "法規"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "利害關係人理論建議企業應：",
+                                            options: ["僅最大化股東價值", "平衡多個利害關係人利益", "忽視外部壓力", "僅專注利潤"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "卓越績效主要來自：",
+                                            options: ["僅靠運氣", "僅靠產業選擇", "可持續競爭優勢", "市場時機"],
+                                            correct: 2
+                                        },
+                                        {
+                                            question: "高階主管薪酬旨在：",
+                                            options: ["最大化經理人財富", "使經理人-股東利益一致", "降低成本", "增加複雜性"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "何者是外部治理機制？",
+                                            options: ["所有權結構", "高階主管薪酬", "企業控制權市場", "內部稽核"],
+                                            correct: 2
+                                        },
+                                        {
+                                            question: "事業策略專注於：",
+                                            options: ["投資組合管理", "如何在特定市場競爭", "進入哪些產業", "資本配置"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "績效最弱的驅動因素是：",
+                                            options: ["企業效應", "產業效應", "策略選擇", "管理品質"],
+                                            correct: 1
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        id: 2,
+                        title: "價值-價格-成本架構與商業模式",
+                        icon: "💰",
+                        keyInsight: "價值創造與擷取需要理解顧客價值、定價能力和成本結構之間的關係。",
+                        tabs: [
+                            {
+                                id: "overview",
+                                name: "總覽",
+                                content: {
+                                    executiveSummary: {
+                                        title: "執行摘要",
+                                        points: [
+                                            "V-P-C架構將企業績效分解為價值創造和價值擷取。",
+                                            "顧客願付價格（WTP）決定最大價值；成本決定最低效率。",
+                                            "商業模式闡明企業如何創造、交付和擷取價值。"
+                                        ],
+                                        learningObjectives: [
+                                            "應用價值-價格-成本架構分析企業績效",
+                                            "理解價值創造與擷取之間的關係",
+                                            "使用商業模式圖繪製商業模式"
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                id: "core-concepts",
+                                name: "核心概念",
+                                content: {
+                                    sections: [
+                                        {
+                                            title: "理解企業績效",
+                                            content: "企業績效有兩個面向：會計績效（如ROA、ROE等獲利率）和股東價值（如Tobin's q和經濟附加價值等市場指標）。這些指標評估企業如何有效地將資源轉換為利潤和股東回報。",
+                                            glossary: [
+                                                { term: "資產報酬率（ROA）", definition: "淨利除以總資產，衡量企業使用資產產生利潤的效率。" },
+                                                { term: "股東權益報酬率（ROE）", definition: "淨利除以股東權益，顯示股東投資產生的回報。" },
+                                                { term: "Tobin's q", definition: "企業市值除以資產重置成本，顯示市場對企業品質的看法。" }
+                                            ],
+                                            practicalLinks: [
+                                                { 
+                                                    title: "理解 ROE vs ROA (影片)", 
+                                                    url: "https://www.youtube.com/watch?v=n733V-gEemo", 
+                                                    source: "YouTube - The Plain Bagel",
+                                                    type: "video"
+                                                },
+                                                { 
+                                                    title: "華倫·巴菲特談財務指標 (播客)", 
+                                                    url: "https://www.berkshirehathaway.com/letters/2023ltr.pdf", 
+                                                    source: "波克夏年度信",
+                                                    type: "article"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            title: "V-P-C架構",
+                                            content: "價值-價格-成本架構提供企業如何創造和擷取價值的全面觀點。價值（V）代表顧客願付價格，價格（P）是顧客實際支付金額，成本（C）代表企業總成本。消費者剩餘 = V - P，而生產者剩餘（利潤）= P - C。總創造價值 = V - C。",
+                                            glossary: [
+                                                { term: "願付價格（WTP）", definition: "顧客願意為產品或服務支付的最大金額，代表認知價值。" },
+                                                { term: "消費者剩餘", definition: "消費者願意支付與實際支付之間的差額（V - P）。" },
+                                                { term: "生產者剩餘", definition: "收到的價格與產生的成本之間的差額（P - C），代表企業利潤。" },
+                                                { term: "價值創造", definition: "產生的總經濟價值，以 V - C 衡量。" }
+                                            ],
+                                            practicalLinks: [
+                                                { 
+                                                    title: "好市多商業模式深度解析 (影片)", 
+                                                    url: "https://www.youtube.com/watch?v=6fhQPPjV96g", 
+                                                    source: "YouTube - Company Man",
+                                                    type: "video"
+                                                },
+                                                { 
+                                                    title: "精品定價能力：LVMH 個案", 
+                                                    url: "https://www.businessoffashion.com/articles/luxury/lvmh-earnings-resilience-luxury-market/", 
+                                                    source: "Business of Fashion",
+                                                    type: "article"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            title: "價值創造與價值擷取",
+                                            content: "價值創造透過創新、品質改善或成本降低增加總餅（V - C）。價值擷取決定這個餅如何在顧客（消費者剩餘）和企業（生產者剩餘）之間分配。可持續競爭優勢需要既創造更多價值，又擷取更大份額。",
+                                            glossary: [
+                                                { term: "價值創造", definition: "透過提高WTP或降低成本擴大總經濟價值。" },
+                                                { term: "價值擷取", definition: "透過定價能力、議價或競爭定位擷取更大份額的創造價值。" },
+                                                { term: "議價能力", definition: "在交易中談判有利條件的能力，影響價值分配。" }
+                                            ],
+                                            practicalLinks: [
+                                                { 
+                                                    title: "IKEA 的藍海策略 (影片)", 
+                                                    url: "https://www.youtube.com/watch?v=sdG8HXDWeX0", 
+                                                    source: "YouTube - Business Casual",
+                                                    type: "video"
+                                                },
+                                                { 
+                                                    title: "電商價格戰 (播客)", 
+                                                    url: "https://www.npr.org/2023/07/21/1189396423/amazon-walmart-price-competition", 
+                                                    source: "NPR Marketplace",
+                                                    type: "podcast"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            title: "商業模式圖",
+                                            content: "商業模式圖呈現組織如何跨越九個構成要素創造、交付和擷取價值：目標客層、價值主張、通路、顧客關係、收益流、關鍵資源、關鍵活動、關鍵夥伴和成本結構。這個架構有助於視覺化商業模式的相互連結元素。",
+                                            glossary: [
+                                                { term: "價值主張", definition: "為特定目標客層創造價值的產品和服務組合。" },
+                                                { term: "目標客層", definition: "企業旨在接觸和服務的不同人群或組織。" },
+                                                { term: "收益流", definition: "企業從每個目標客層產生現金的方式。" },
+                                                { term: "關鍵資源", definition: "使商業模式運作所需的最重要資產。" }
+                                            ],
+                                            practicalLinks: [
+                                                { 
+                                                    title: "Airbnb 商業模式解析 (影片)", 
+                                                    url: "https://www.youtube.com/watch?v=E1-H9iYWFDQ", 
+                                                    source: "YouTube - CNBC",
+                                                    type: "video"
+                                                },
+                                                { 
+                                                    title: "Spotify 免費增值策略播客", 
+                                                    url: "https://open.spotify.com/episode/7AHPYjAzXtZfcfKxkWEWpM", 
+                                                    source: "How I Built This",
+                                                    type: "podcast"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                id: "flip-cards",
+                                name: "翻轉卡",
+                                content: {
+                                    cards: [
+                                        { front: "何謂V-P-C架構？", back: "價值（顧客WTP）、價格（實際支付）、成本（企業費用）。衡量價值創造（V-C）和擷取（V-C如何在消費者與生產者剩餘間分配）。" },
+                                        { front: "消費者剩餘公式？", back: "消費者剩餘 = V - P（顧客獲得：其願付價格減去實際支付）" },
+                                        { front: "生產者剩餘公式？", back: "生產者剩餘 = P - C（企業利潤：收到的價格減去產生的成本）" },
+                                        { front: "總創造價值公式？", back: "總創造價值 = V - C（交易產生的最大經濟價值）" },
+                                        { front: "ROA與ROE差異？", back: "ROA = 淨利 / 總資產（資產效率）。ROE = 淨利 / 權益（股東回報）。ROE考慮槓桿。" },
+                                        { front: "商業模式圖的九個要素？", back: "目標客層、價值主張、通路、顧客關係、收益流、關鍵資源、關鍵活動、關鍵夥伴、成本結構。" }
+                                    ]
+                                }
+                            },
+                            {
+                                id: "quiz",
+                                name: "測驗",
+                                content: {
+                                    questions: [
+                                        {
+                                            question: "V-P-C架構中的「V」代表什麼？",
+                                            options: ["變動成本", "顧客願付價格", "價值擷取", "供應商價格"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "消費者剩餘的計算方式：",
+                                            options: ["P - C", "V - C", "V - P", "C - V"],
+                                            correct: 2
+                                        },
+                                        {
+                                            question: "總創造價值等於：",
+                                            options: ["P - C", "V - P", "V - C", "P + C"],
+                                            correct: 2
+                                        },
+                                        {
+                                            question: "生產者剩餘代表：",
+                                            options: ["顧客利益", "企業利潤", "總價值", "市場規模"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "ROA衡量：",
+                                            options: ["市值", "資產效率", "權益回報", "銷售成長"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "價值擷取指的是：",
+                                            options: ["創造更多價值", "降低成本", "擷取創造的價值", "增加生產"],
+                                            correct: 2
+                                        },
+                                        {
+                                            question: "何者不是商業模式圖的一部分？",
+                                            options: ["價值主張", "目標客層", "競爭優勢", "收益流"],
+                                            correct: 2
+                                        },
+                                        {
+                                            question: "Tobin's q比較：",
+                                            options: ["收入與成本", "市值與資產重置成本", "利潤與銷售", "債務與權益"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "要增加價值創造，企業可以：",
+                                            options: ["僅提高價格", "提高WTP或降低成本", "僅削減成本", "僅改善品質"],
+                                            correct: 1
+                                        },
+                                        {
+                                            question: "商業模式圖中的關鍵資源包括：",
+                                            options: ["僅財務資產", "實體、智慧、人力和財務資產", "僅人力資源", "僅科技"],
+                                            correct: 1
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        // Main App Component
+        function App() {
+            const [language, setLanguage] = useState('en');
+            const [darkMode, setDarkMode] = useState(true);
+            const [menuOpen, setMenuOpen] = useState(false);
+            const [currentTopic, setCurrentTopic] = useState(1);
+            const [currentTab, setCurrentTab] = useState('overview');
+            const [showDashboard, setShowDashboard] = useState(false);
+            const [showAIAssistant, setShowAIAssistant] = useState(false);
+            const [progress, setProgress] = useState({});
+            const [quizResults, setQuizResults] = useState({});
+            const [isTTSActive, setIsTTSActive] = useState(false);
+
+            const content = courseData[language];
+            const topic = content.topics.find(t => t.id === currentTopic);
+            const tab = topic?.tabs.find(t => t.id === currentTab);
+
+            useEffect(() => {
+                document.body.style.backgroundColor = darkMode ? 'var(--dark-bg)' : 'var(--light-bg)';
+                document.body.style.color = darkMode ? 'var(--text-light)' : 'var(--text-dark)';
+            }, [darkMode]);
+
+            // Monitor speech synthesis state
+            useEffect(() => {
+                const checkTTS = setInterval(() => {
+                    setIsTTSActive(window.speechSynthesis.speaking);
+                }, 200);
+                
+                return () => clearInterval(checkTTS);
+            }, []);
+
+            const handleStopTTS = () => {
+                window.speechSynthesis.cancel();
+                setIsTTSActive(false);
+            };
+
+            const toggleLanguage = () => setLanguage(language === 'en' ? 'zh' : 'en');
+            const toggleDarkMode = () => setDarkMode(!darkMode);
+
+            return (
+                <div className="min-h-screen">
+                    <Header 
+                        language={language}
+                        darkMode={darkMode}
+                        onToggleLanguage={toggleLanguage}
+                        onToggleDarkMode={toggleDarkMode}
+                        onToggleMenu={() => setMenuOpen(!menuOpen)}
+                        onShowDashboard={() => setShowDashboard(true)}
+                    />
+                    
+                    {/* Overlay to close menu when clicking outside */}
+                    {menuOpen && (
+                        <div 
+                            className="fixed inset-0 z-[800] bg-black bg-opacity-30"
+                            onClick={() => setMenuOpen(false)}
+                        />
+                    )}
+                    
+                    <Sidebar 
+                        isOpen={menuOpen}
+                        topics={content.topics}
+                        currentTopic={currentTopic}
+                        onSelectTopic={(id) => {
+                            setCurrentTopic(id);
+                            setCurrentTab('overview');
+                            setMenuOpen(false);
+                        }}
+                        darkMode={darkMode}
+                        language={language}
+                    />
+
+                    <main className="pt-8 px-4 md:px-8 lg:px-16 min-h-screen">
+                        {topic && (
+                            <div className="max-w-7xl mx-auto">
+                                <TopicHeader topic={topic} darkMode={darkMode} />
+                                <TabNavigation 
+                                    tabs={topic.tabs}
+                                    currentTab={currentTab}
+                                    onTabChange={setCurrentTab}
+                                    darkMode={darkMode}
+                                />
+                                <TabContent 
+                                    tab={tab}
+                                    darkMode={darkMode}
+                                    language={language}
+                                    topicId={topic.id}
+                                    quizResults={quizResults}
+                                    setQuizResults={setQuizResults}
+                                />
+                            </div>
+                        )}
+                    </main>
+
+                    {showDashboard && (
+                        <Dashboard 
+                            onClose={() => setShowDashboard(false)}
+                            progress={progress}
+                            quizResults={quizResults}
+                            darkMode={darkMode}
+                            language={language}
+                        />
+                    )}
+
+                    {showAIAssistant && (
+                        <AIAssistant 
+                            onClose={() => setShowAIAssistant(false)}
+                            darkMode={darkMode}
+                            language={language}
+                            courseData={courseData}
+                        />
+                    )}
+
+                    <FloatingButtons 
+                        onShowAI={() => setShowAIAssistant(true)}
+                        darkMode={darkMode}
+                        isTTSActive={isTTSActive}
+                        onStopTTS={handleStopTTS}
+                    />
+
+                    <Footer darkMode={darkMode} language={language} />
+                </div>
+            );
+        }
+
+        // Header Component
+        function Header({ language, darkMode, onToggleLanguage, onToggleDarkMode, onToggleMenu, onShowDashboard }) {
+            return (
+                <header className={`fixed top-0 w-full z-50 ${darkMode ? 'bg-dark-surface' : 'bg-light-surface'} shadow-lg transition-all duration-300`}>
+                    <div className="flex items-center justify-between px-6 py-4">
+                        <div className="flex items-center space-x-4">
+                            <button onClick={onToggleMenu} className="p-2 hover:bg-opacity-10 hover:bg-white rounded-lg transition-all">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                            </button>
+                            <h1 className="text-xl md:text-2xl font-bold display-font">
+                                <span style={{color: 'var(--bcg-green)'}}>SMMC</span> {language === 'en' ? 'Learning Platform' : '學習平台'}
+                            </h1>
+                        </div>
+                        
+                        <div className="flex items-center space-x-3">
+                            <button onClick={onShowDashboard} className="p-2 hover:bg-opacity-10 hover:bg-white rounded-lg transition-all" title={language === 'en' ? 'Dashboard' : '儀表板'}>
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </button>
+                            <button onClick={onToggleLanguage} className="px-3 py-1 rounded-lg border transition-all hover:bg-opacity-10 hover:bg-white" style={{borderColor: 'var(--bcg-green)'}}>
+                                {language === 'en' ? '繁中' : 'EN'}
+                            </button>
+                            <button onClick={onToggleDarkMode} className="p-2 hover:bg-opacity-10 hover:bg-white rounded-lg transition-all">
+                                {darkMode ? '☀️' : '🌙'}
+                            </button>
+                        </div>
+                    </div>
+                </header>
+            );
+        }
+
+        // Sidebar Component - Now as dropdown menu
+        function Sidebar({ isOpen, topics, currentTopic, onSelectTopic, darkMode, language }) {
+            if (!isOpen) return null;
+            
+            return (
+                <div className={`fixed top-20 left-6 w-72 ${darkMode ? 'bg-dark-surface border-gray-700' : 'bg-white border-gray-200'} border-2 rounded-xl shadow-2xl z-[900] max-h-[80vh] overflow-y-auto animate-fade-in`}>
+                    <nav className="p-4 space-y-2">
+                        <h3 className="text-sm font-semibold opacity-60 mb-4 px-2">{language === 'en' ? 'TOPICS' : '主題'}</h3>
+                        {topics.map((topic, index) => (
+                            <button
+                                key={topic.id}
+                                onClick={() => onSelectTopic(topic.id)}
+                                className={`w-full text-left px-4 py-3 rounded-lg transition-all flex items-center space-x-3 ${
+                                    currentTopic === topic.id 
+                                        ? 'text-white' 
+                                        : 'hover:bg-opacity-10 hover:bg-bcg-green'
+                                }`}
+                                style={currentTopic === topic.id ? {backgroundColor: 'var(--bcg-green)'} : {}}
+                            >
+                                <span className="text-2xl">{topic.icon}</span>
+                                <span className="text-sm font-medium flex-1">
+                                    {language === 'en' ? `Topic ${index + 1}` : `主題 ${index + 1}`}: {topic.title}
+                                </span>
+                            </button>
+                        ))}
+                    </nav>
+                </div>
+            );
+        }
+
+        // Topic Header Component
+        function TopicHeader({ topic, darkMode }) {
+            return (
+                <div className="mb-8 animate-fade-in-up">
+                    <div className="flex items-center space-x-4 mb-4">
+                        <span className="text-6xl">{topic.icon}</span>
+                        <h2 className="text-4xl md:text-5xl font-bold display-font">{topic.title}</h2>
+                    </div>
+                    <p className="text-xl md:text-2xl opacity-80 italic">{topic.keyInsight}</p>
+                </div>
+            );
+        }
+
+        // Tab Navigation Component
+        function TabNavigation({ tabs, currentTab, onTabChange, darkMode }) {
+            return (
+                <div className={`sticky top-20 z-40 flex space-x-2 mb-8 border-b ${darkMode ? 'border-gray-700 bg-dark-bg' : 'border-gray-300 bg-light-bg'} py-3 -mx-4 px-4 md:-mx-8 md:px-8 lg:-mx-16 lg:px-16 animate-fade-in-up stagger-1`}>
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => onTabChange(tab.id)}
+                            className={`px-6 py-3 font-medium transition-all rounded-t-lg ${
+                                currentTab === tab.id
+                                    ? 'border-b-2 text-accent bg-opacity-10'
+                                    : 'opacity-60 hover:opacity-100 hover:bg-opacity-5 hover:bg-white'
+                            }`}
+                            style={currentTab === tab.id ? {borderColor: 'var(--accent)', backgroundColor: darkMode ? 'rgba(0, 191, 165, 0.1)' : 'rgba(0, 77, 64, 0.05)'} : {}}
+                        >
+                            {tab.name}
+                        </button>
+                    ))}
+                </div>
+            );
+        }
+
+        // Tab Content Component
+        function TabContent({ tab, darkMode, language, topicId, quizResults, setQuizResults }) {
+            if (!tab) return null;
+
+            if (tab.id === 'overview') {
+                return <OverviewTab content={tab.content} darkMode={darkMode} language={language} />;
+            } else if (tab.id === 'core-concepts') {
+                return <CoreConceptsTab content={tab.content} darkMode={darkMode} language={language} topicId={topicId} />;
+            } else if (tab.id === 'flip-cards') {
+                return <FlipCardsTab content={tab.content} darkMode={darkMode} />;
+            } else if (tab.id === 'quiz') {
+                return <QuizTab content={tab.content} darkMode={darkMode} language={language} topicId={topicId} quizResults={quizResults} setQuizResults={setQuizResults} />;
+            }
+
+            return null;
+        }
+
+        // Overview Tab Component
+        function OverviewTab({ content, darkMode, language }) {
+            const [isReading, setIsReading] = useState(false);
+            const summaryRef = useRef(null);
+
+            // Load voices
+            useEffect(() => {
+                const loadVoices = () => {
+                    window.speechSynthesis.getVoices();
+                };
+                
+                loadVoices();
+                if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                    window.speechSynthesis.onvoiceschanged = loadVoices;
+                }
+            }, []);
+
+            const handleTTS = () => {
+                if (isReading) {
+                    window.speechSynthesis.cancel();
+                    setIsReading(false);
+                    return;
+                }
+
+                const text = [
+                    content.executiveSummary.title,
+                    ...content.executiveSummary.points,
+                    language === 'en' ? 'Learning Objectives:' : '學習目標：',
+                    ...content.executiveSummary.learningObjectives
+                ].join('. ');
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                
+                // Better voice selection
+                if (language === 'zh') {
+                    utterance.lang = 'zh-TW';
+                    utterance.rate = 0.85;
+                    
+                    const voices = window.speechSynthesis.getVoices();
+                    const zhVoice = voices.find(voice => 
+                        voice.lang.includes('zh-TW') || 
+                        voice.lang.includes('zh-HK') ||
+                        (voice.lang.includes('zh') && voice.name.includes('Taiwan'))
+                    );
+                    if (zhVoice) {
+                        utterance.voice = zhVoice;
+                    }
+                } else {
+                    utterance.lang = 'en-GB';
+                    utterance.rate = 0.9;
+                    
+                    const voices = window.speechSynthesis.getVoices();
+                    const enVoice = voices.find(voice => 
+                        voice.lang.includes('en-GB') ||
+                        voice.name.includes('British')
+                    );
+                    if (enVoice) {
+                        utterance.voice = enVoice;
+                    }
+                }
+                
+                utterance.onend = () => setIsReading(false);
+                
+                window.speechSynthesis.speak(utterance);
+                setIsReading(true);
+            };
+
+            return (
+                <div className="animate-fade-in-up stagger-2" ref={summaryRef}>
+                    <div className={`${darkMode ? 'bg-dark-surface' : 'bg-light-surface'} rounded-xl p-8 shadow-lg mb-8`}>
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-2xl font-bold display-font">{content.executiveSummary.title}</h3>
+                            <button 
+                                onClick={handleTTS}
+                                className="p-3 rounded-lg hover:bg-opacity-10 hover:bg-white transition-all"
+                                title={isReading ? (language === 'en' ? 'Stop' : '停止') : (language === 'en' ? 'Read Aloud' : '朗讀')}
+                            >
+                                {isReading ? '⏸️' : '🔊'}
+                            </button>
+                        </div>
+                        
+                        <div className="space-y-4 mb-8">
+                            {content.executiveSummary.points.map((point, index) => (
+                                <div key={index} className="flex items-start space-x-3">
+                                    <span className="mt-1" style={{color: 'var(--accent)'}}>▸</span>
+                                    <p className="flex-1 text-lg">{point}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className={`pt-6 border-t ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+                            <h4 className="font-semibold mb-4 text-lg">{language === 'en' ? 'Learning Objectives' : '學習目標'}</h4>
+                            <div className="grid md:grid-cols-2 gap-4">
+                                {content.executiveSummary.learningObjectives.map((objective, index) => (
+                                    <div key={index} className={`p-4 rounded-lg ${darkMode ? 'bg-black bg-opacity-30' : 'bg-gray-100'}`}>
+                                        <div className="flex items-center space-x-2">
+                                            <span className="text-2xl">🎯</span>
+                                            <p>{objective}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Infographics Component
+        function Infographic({ type, darkMode, language }) {
+            const isEn = language === 'en';
+            
+            if (type === 'performance-sources') {
+                return (
+                    <svg viewBox="0 0 600 400" className="w-full h-auto">
+                        <defs>
+                            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style={{stopColor: '#004d40', stopOpacity: 1}} />
+                                <stop offset="100%" style={{stopColor: '#00bfa5', stopOpacity: 1}} />
+                            </linearGradient>
+                        </defs>
+                        
+                        {/* Title */}
+                        <text x="300" y="40" textAnchor="middle" fontSize="24" fontWeight="bold" fill={darkMode ? '#eceff1' : '#263238'}>
+                            {isEn ? 'Sources of Superior Performance' : '卓越績效的來源'}
+                        </text>
+                        
+                        {/* Pie Chart */}
+                        <circle cx="300" cy="220" r="120" fill="none" stroke="#cfd8dc" strokeWidth="2"/>
+                        
+                        {/* Firm Effects - 45% */}
+                        <path d="M 300 100 A 120 120 0 0 1 411.3 267.6 L 300 220 Z" fill="#004d40" opacity="0.9"/>
+                        <text x="360" y="160" fontSize="16" fontWeight="bold" fill="#fff">45%</text>
+                        <text x="350" y="180" fontSize="12" fill="#fff">{isEn ? 'Firm' : '企業'}</text>
+                        <text x="345" y="195" fontSize="12" fill="#fff">{isEn ? 'Effects' : '效應'}</text>
+                        
+                        {/* Luck/Year - 45% */}
+                        <path d="M 300 220 L 411.3 267.6 A 120 120 0 0 1 188.7 267.6 Z" fill="#00bfa5" opacity="0.8"/>
+                        <text x="290" y="300" fontSize="16" fontWeight="bold" fill="#263238">45%</text>
+                        <text x="270" y="320" fontSize="12" fill="#263238">{isEn ? 'Luck/Year' : '運氣/年度'}</text>
+                        
+                        {/* Industry - 10% */}
+                        <path d="M 300 220 L 188.7 267.6 A 120 120 0 0 1 300 100 Z" fill="#546e7a" opacity="0.9"/>
+                        <text x="220" y="180" fontSize="16" fontWeight="bold" fill="#fff">10%</text>
+                        <text x="210" y="195" fontSize="12" fill="#fff">{isEn ? 'Industry' : '產業'}</text>
+                    </svg>
+                );
+            }
+            
+            if (type === 'vpc-framework') {
+                return (
+                    <svg viewBox="0 0 700 400" className="w-full h-auto">
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" fill="#004d40" />
+                            </marker>
+                        </defs>
+                        
+                        {/* Title */}
+                        <text x="350" y="40" textAnchor="middle" fontSize="24" fontWeight="bold" fill={darkMode ? '#eceff1' : '#263238'}>
+                            {isEn ? 'Value-Price-Cost Framework' : '價值-價格-成本架構'}
+                        </text>
+                        
+                        {/* Vertical axis */}
+                        <line x1="100" y1="100" x2="100" y2="350" stroke={darkMode ? '#eceff1' : '#263238'} strokeWidth="2" markerEnd="url(#arrowhead)"/>
+                        
+                        {/* Value (V) */}
+                        <line x1="90" y1="120" x2="600" y2="120" stroke="#004d40" strokeWidth="3" strokeDasharray="5,5"/>
+                        <text x="620" y="125" fontSize="18" fontWeight="bold" fill="#004d40">V</text>
+                        <text x="120" y="115" fontSize="14" fill={darkMode ? '#eceff1' : '#263238'}>
+                            {isEn ? 'Customer Willingness-to-Pay' : '顧客支付意願'}
+                        </text>
+                        
+                        {/* Price (P) */}
+                        <line x1="90" y1="220" x2="600" y2="220" stroke="#00bfa5" strokeWidth="3"/>
+                        <text x="620" y="225" fontSize="18" fontWeight="bold" fill="#00bfa5">P</text>
+                        <text x="120" y="215" fontSize="14" fill={darkMode ? '#eceff1' : '#263238'}>
+                            {isEn ? 'Price' : '價格'}
+                        </text>
+                        
+                        {/* Cost (C) */}
+                        <line x1="90" y1="320" x2="600" y2="320" stroke="#546e7a" strokeWidth="3"/>
+                        <text x="620" y="325" fontSize="18" fontWeight="bold" fill="#546e7a">C</text>
+                        <text x="120" y="315" fontSize="14" fill={darkMode ? '#eceff1' : '#263238'}>
+                            {isEn ? 'Cost' : '成本'}
+                        </text>
+                        
+                        {/* Consumer Surplus bracket */}
+                        <path d="M 80 120 L 70 120 L 70 220 L 80 220" stroke="#004d40" fill="none" strokeWidth="2"/>
+                        <text x="30" y="175" fontSize="14" fontWeight="bold" fill="#004d40">
+                            {isEn ? 'Consumer' : '消費者'}
+                        </text>
+                        <text x="35" y="190" fontSize="14" fontWeight="bold" fill="#004d40">
+                            {isEn ? 'Surplus' : '剩餘'}
+                        </text>
+                        <text x="35" y="205" fontSize="12" fill="#004d40">(V-P)</text>
+                        
+                        {/* Producer Surplus bracket */}
+                        <path d="M 80 220 L 70 220 L 70 320 L 80 320" stroke="#00bfa5" fill="none" strokeWidth="2"/>
+                        <text x="30" y="265" fontSize="14" fontWeight="bold" fill="#00bfa5">
+                            {isEn ? 'Producer' : '生產者'}
+                        </text>
+                        <text x="35" y="280" fontSize="14" fontWeight="bold" fill="#00bfa5">
+                            {isEn ? 'Surplus' : '剩餘'}
+                        </text>
+                        <text x="35" y="295" fontSize="12" fill="#00bfa5">(P-C)</text>
+                        
+                        {/* Total Value Created */}
+                        <path d="M 610 120 L 620 120 L 620 320 L 610 320" stroke="#004d40" fill="none" strokeWidth="2"/>
+                        <text x="630" y="215" fontSize="14" fontWeight="bold" fill="#004d40">
+                            {isEn ? 'Total Value' : '總價值'}
+                        </text>
+                        <text x="640" y="235" fontSize="12" fill="#004d40">(V-C)</text>
+                    </svg>
+                );
+            }
+            
+            if (type === 'strategy-types') {
+                return (
+                    <svg viewBox="0 0 700 400" className="w-full h-auto">
+                        {/* Title */}
+                        <text x="350" y="40" textAnchor="middle" fontSize="24" fontWeight="bold" fill={darkMode ? '#eceff1' : '#263238'}>
+                            {isEn ? 'Corporate vs Business Strategy' : '企業策略 vs 事業策略'}
+                        </text>
+                        
+                        {/* Corporate Strategy Box */}
+                        <rect x="50" y="100" width="280" height="220" rx="10" fill="#004d40" opacity="0.9"/>
+                        <text x="190" y="140" textAnchor="middle" fontSize="20" fontWeight="bold" fill="#fff">
+                            {isEn ? 'Corporate Strategy' : '企業策略'}
+                        </text>
+                        <text x="190" y="180" textAnchor="middle" fontSize="16" fill="#fff">
+                            {isEn ? 'WHERE to compete?' : '在哪競爭？'}
+                        </text>
+                        <text x="80" y="220" fontSize="13" fill="#eceff1">• {isEn ? 'Which industries?' : '哪些產業？'}</text>
+                        <text x="80" y="245" fontSize="13" fill="#eceff1">• {isEn ? 'Which markets?' : '哪些市場？'}</text>
+                        <text x="80" y="270" fontSize="13" fill="#eceff1">• {isEn ? 'Portfolio decisions' : '投資組合決策'}</text>
+                        <text x="80" y="295" fontSize="13" fill="#eceff1">• {isEn ? 'Resource allocation' : '資源配置'}</text>
+                        
+                        {/* Business Strategy Box */}
+                        <rect x="370" y="100" width="280" height="220" rx="10" fill="#00bfa5" opacity="0.9"/>
+                        <text x="510" y="140" textAnchor="middle" fontSize="20" fontWeight="bold" fill="#263238">
+                            {isEn ? 'Business Strategy' : '事業策略'}
+                        </text>
+                        <text x="510" y="180" textAnchor="middle" fontSize="16" fill="#263238">
+                            {isEn ? 'HOW to compete?' : '如何競爭？'}
+                        </text>
+                        <text x="400" y="220" fontSize="13" fill="#263238">• {isEn ? 'Competitive positioning' : '競爭定位'}</text>
+                        <text x="400" y="245" fontSize="13" fill="#263238">• {isEn ? 'Value proposition' : '價值主張'}</text>
+                        <text x="400" y="270" fontSize="13" fill="#263238">• {isEn ? 'Cost vs differentiation' : '成本 vs 差異化'}</text>
+                        <text x="400" y="295" fontSize="13" fill="#263238">• {isEn ? 'Competitive advantage' : '競爭優勢'}</text>
+                    </svg>
+                );
+            }
+            
+            if (type === 'business-model-canvas') {
+                return (
+                    <svg viewBox="0 0 900 500" className="w-full h-auto">
+                        {/* Title */}
+                        <text x="450" y="35" textAnchor="middle" fontSize="22" fontWeight="bold" fill={darkMode ? '#eceff1' : '#263238'}>
+                            {isEn ? 'Business Model Canvas' : '商業模式圖'}
+                        </text>
+                        
+                        {/* Grid layout */}
+                        {/* Key Partners */}
+                        <rect x="50" y="70" width="140" height="180" fill="#004d40" opacity="0.8" rx="5"/>
+                        <text x="120" y="95" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#fff">
+                            {isEn ? 'Key Partners' : '關鍵夥伴'}
+                        </text>
+                        
+                        {/* Key Activities */}
+                        <rect x="200" y="70" width="140" height="85" fill="#00695c" opacity="0.8" rx="5"/>
+                        <text x="270" y="90" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#fff">
+                            {isEn ? 'Key Activities' : '關鍵活動'}
+                        </text>
+                        
+                        {/* Key Resources */}
+                        <rect x="200" y="165" width="140" height="85" fill="#00695c" opacity="0.8" rx="5"/>
+                        <text x="270" y="185" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#fff">
+                            {isEn ? 'Key Resources' : '關鍵資源'}
+                        </text>
+                        
+                        {/* Value Propositions */}
+                        <rect x="350" y="70" width="140" height="180" fill="#00bfa5" opacity="0.9" rx="5"/>
+                        <text x="420" y="95" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#263238">
+                            {isEn ? 'Value' : '價值'}
+                        </text>
+                        <text x="420" y="110" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#263238">
+                            {isEn ? 'Propositions' : '主張'}
+                        </text>
+                        
+                        {/* Customer Relationships */}
+                        <rect x="500" y="70" width="140" height="85" fill="#00897b" opacity="0.8" rx="5"/>
+                        <text x="570" y="90" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#fff">
+                            {isEn ? 'Customer' : '顧客'}
+                        </text>
+                        <text x="570" y="105" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#fff">
+                            {isEn ? 'Relationships' : '關係'}
+                        </text>
+                        
+                        {/* Channels */}
+                        <rect x="500" y="165" width="140" height="85" fill="#00897b" opacity="0.8" rx="5"/>
+                        <text x="570" y="185" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#fff">
+                            {isEn ? 'Channels' : '通路'}
+                        </text>
+                        
+                        {/* Customer Segments */}
+                        <rect x="650" y="70" width="140" height="180" fill="#004d40" opacity="0.8" rx="5"/>
+                        <text x="720" y="95" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#fff">
+                            {isEn ? 'Customer' : '目標'}
+                        </text>
+                        <text x="720" y="110" textAnchor="middle" fontSize="12" fontWeight="bold" fill="#fff">
+                            {isEn ? 'Segments' : '客層'}
+                        </text>
+                        
+                        {/* Cost Structure */}
+                        <rect x="50" y="270" width="390" height="150" fill="#546e7a" opacity="0.8" rx="5"/>
+                        <text x="245" y="295" textAnchor="middle" fontSize="13" fontWeight="bold" fill="#fff">
+                            {isEn ? 'Cost Structure' : '成本結構'}
+                        </text>
+                        
+                        {/* Revenue Streams */}
+                        <rect x="450" y="270" width="340" height="150" fill="#00bfa5" opacity="0.8" rx="5"/>
+                        <text x="620" y="295" textAnchor="middle" fontSize="13" fontWeight="bold" fill="#263238">
+                            {isEn ? 'Revenue Streams' : '收益流'}
+                        </text>
+                    </svg>
+                );
+            }
+            
+            return null;
+        }
+
+        // Core Concepts Tab Component
+        function CoreConceptsTab({ content, darkMode, language, topicId }) {
+            const [expandedGlossary, setExpandedGlossary] = useState({});
+            const [isReading, setIsReading] = useState(false);
+            const [readingSection, setReadingSection] = useState(null);
+
+            // Load voices
+            useEffect(() => {
+                const loadVoices = () => {
+                    window.speechSynthesis.getVoices();
+                };
+                
+                loadVoices();
+                if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                    window.speechSynthesis.onvoiceschanged = loadVoices;
+                }
+            }, []);
+
+            const toggleGlossary = (sectionIndex, termIndex) => {
+                const key = `${sectionIndex}-${termIndex}`;
+                setExpandedGlossary(prev => ({...prev, [key]: !prev[key]}));
+            };
+
+            const handleSectionTTS = (section, sectionIndex) => {
+                if (isReading && readingSection === sectionIndex) {
+                    window.speechSynthesis.cancel();
+                    setIsReading(false);
+                    setReadingSection(null);
+                    return;
+                }
+
+                window.speechSynthesis.cancel();
+                
+                const text = `${section.title}. ${section.content}`;
+                const utterance = new SpeechSynthesisUtterance(text);
+                
+                // Better voice selection for Traditional Chinese
+                if (language === 'zh') {
+                    utterance.lang = 'zh-TW';
+                    utterance.rate = 0.85; // Slightly slower for better clarity
+                    
+                    // Try to get better Chinese voice
+                    const voices = window.speechSynthesis.getVoices();
+                    const zhVoice = voices.find(voice => 
+                        voice.lang.includes('zh-TW') || 
+                        voice.lang.includes('zh-HK') ||
+                        (voice.lang.includes('zh') && voice.name.includes('Taiwan'))
+                    );
+                    if (zhVoice) {
+                        utterance.voice = zhVoice;
+                    }
+                } else {
+                    utterance.lang = 'en-GB';
+                    utterance.rate = 0.9;
+                    
+                    // Try to get British English voice
+                    const voices = window.speechSynthesis.getVoices();
+                    const enVoice = voices.find(voice => 
+                        voice.lang.includes('en-GB') ||
+                        voice.name.includes('British')
+                    );
+                    if (enVoice) {
+                        utterance.voice = enVoice;
+                    }
+                }
+                
+                utterance.onend = () => {
+                    setIsReading(false);
+                    setReadingSection(null);
+                };
+                
+                window.speechSynthesis.speak(utterance);
+                setIsReading(true);
+                setReadingSection(sectionIndex);
+            };
+
+            // Determine which infographics to show based on topic
+            const infographics = [];
+            if (topicId === 1) {
+                infographics.push(
+                    { type: 'performance-sources', title: language === 'en' ? 'Sources of Performance' : '績效來源' },
+                    { type: 'strategy-types', title: language === 'en' ? 'Strategy Types' : '策略類型' }
+                );
+            } else if (topicId === 2) {
+                infographics.push(
+                    { type: 'vpc-framework', title: language === 'en' ? 'V-P-C Framework' : 'V-P-C 架構' },
+                    { type: 'business-model-canvas', title: language === 'en' ? 'Business Model Canvas' : '商業模式圖' }
+                );
+            }
+
+            return (
+                <div className="space-y-8 animate-fade-in-up stagger-2">
+                    {/* Infographics Section */}
+                    {infographics.length > 0 && (
+                        <div className={`${darkMode ? 'bg-dark-surface' : 'bg-light-surface'} rounded-xl p-8 shadow-lg bcg-card`}>
+                            <h3 className="text-2xl font-bold display-font mb-6 flex items-center" style={{color: 'var(--bcg-green)'}}>
+                                <span className="mr-3">📊</span>
+                                {language === 'en' ? 'Visual Framework' : '視覺化架構'}
+                            </h3>
+                            <div className="grid md:grid-cols-2 gap-6">
+                                {infographics.map((info, index) => (
+                                    <div key={index} className={`p-4 rounded-lg ${darkMode ? 'bg-black bg-opacity-20' : 'bg-gray-50'}`}>
+                                        <h4 className="text-center font-semibold mb-4 opacity-80">{info.title}</h4>
+                                        <Infographic type={info.type} darkMode={darkMode} language={language} />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Content Sections */}
+                    {content.sections.map((section, sectionIndex) => (
+                        <div key={sectionIndex} className={`${darkMode ? 'bg-dark-surface' : 'bg-light-surface'} rounded-xl p-8 shadow-lg`}>
+                            <div className="flex justify-between items-start mb-6">
+                                <h3 className="text-2xl font-bold display-font mb-4">{section.title}</h3>
+                                <button 
+                                    onClick={() => handleSectionTTS(section, sectionIndex)}
+                                    className="p-2 rounded-lg hover:bg-opacity-10 hover:bg-white transition-all"
+                                    title={isReading && readingSection === sectionIndex ? (language === 'en' ? 'Stop' : '停止') : (language === 'en' ? 'Read Aloud' : '朗讀')}
+                                >
+                                    {isReading && readingSection === sectionIndex ? '⏸️' : '🔊'}
+                                </button>
+                            </div>
+                            
+                            <p className={`text-lg leading-relaxed mb-6 ${isReading && readingSection === sectionIndex ? 'reading-highlight' : ''}`}>
+                                {section.content}
+                            </p>
+
+                            {section.practicalLinks && section.practicalLinks.length > 0 && (
+                                <div className="mb-6">
+                                    <h4 className="font-semibold mb-3 opacity-80 flex items-center">
+                                        <span className="mr-2">🔗</span>
+                                        {language === 'en' ? 'Practical Cases & Resources' : '實務個案與資源'}
+                                    </h4>
+                                    <div className="grid md:grid-cols-2 gap-3">
+                                        {section.practicalLinks.map((link, linkIndex) => {
+                                            const getMediaIcon = (type) => {
+                                                switch(type) {
+                                                    case 'video': return '🎥';
+                                                    case 'podcast': return '🎙️';
+                                                    case 'article': 
+                                                    default: return '📄';
+                                                }
+                                            };
+                                            
+                                            return (
+                                                <a
+                                                    key={linkIndex}
+                                                    href={link.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className={`p-4 rounded-lg border-2 transition-all hover:scale-105 bcg-card ${
+                                                        darkMode ? 'bg-black bg-opacity-30 border-gray-700 hover:border-bcg-accent' : 'bg-gray-50 border-gray-300 hover:border-bcg-accent'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center mb-2">
+                                                                <span className="text-xl mr-2">{getMediaIcon(link.type)}</span>
+                                                                <span className={`text-xs px-2 py-1 rounded ${
+                                                                    link.type === 'video' ? 'bg-red-500 bg-opacity-20 text-red-400' :
+                                                                    link.type === 'podcast' ? 'bg-purple-500 bg-opacity-20 text-purple-400' :
+                                                                    'bg-blue-500 bg-opacity-20 text-blue-400'
+                                                                }`}>
+                                                                    {link.type || 'article'}
+                                                                </span>
+                                                            </div>
+                                                            <p className="font-medium mb-1">{link.title}</p>
+                                                            <p className="text-sm opacity-60">{link.source}</p>
+                                                        </div>
+                                                        <span className="text-xl ml-2" style={{color: 'var(--bcg-accent)'}}>↗</span>
+                                                    </div>
+                                                </a>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {section.glossary && section.glossary.length > 0 && (
+                                <div className="mt-6">
+                                    <h4 className="font-semibold mb-4 opacity-80">{language === 'en' ? '📚 Key Terms' : '📚 重要名詞'}</h4>
+                                    <div className="space-y-2">
+                                        {section.glossary.map((item, termIndex) => {
+                                            const key = `${sectionIndex}-${termIndex}`;
+                                            const isExpanded = expandedGlossary[key];
+                                            
+                                            return (
+                                                <div key={termIndex} className={`${darkMode ? 'bg-black bg-opacity-30' : 'bg-gray-100'} rounded-lg overflow-hidden`}>
+                                                    <button
+                                                        onClick={() => toggleGlossary(sectionIndex, termIndex)}
+                                                        className="w-full px-4 py-3 flex justify-between items-center hover:bg-opacity-50 hover:bg-white transition-all"
+                                                    >
+                                                        <span className="font-medium">{item.term}</span>
+                                                        <span className="text-xl">{isExpanded ? '−' : '+'}</span>
+                                                    </button>
+                                                    {isExpanded && (
+                                                        <div className="px-4 pb-3 glossary-item" style={{maxHeight: '200px'}}>
+                                                            <p className="opacity-80">{item.definition}</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
+        // Flip Cards Tab Component
+        function FlipCardsTab({ content, darkMode }) {
+            const [flippedCards, setFlippedCards] = useState({});
+
+            const toggleCard = (index) => {
+                setFlippedCards(prev => ({...prev, [index]: !prev[index]}));
+            };
+
+            return (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in-up stagger-2">
+                    {content.cards.map((card, index) => (
+                        <div
+                            key={index}
+                            className={`flip-card h-64 ${flippedCards[index] ? 'flipped' : ''}`}
+                            onClick={() => toggleCard(index)}
+                        >
+                            <div className="flip-card-inner">
+                                <div 
+                                    className={`flip-card-front ${darkMode ? 'bg-dark-surface' : 'bg-light-surface'} shadow-lg`}
+                                    style={{border: '2px solid var(--bcg-green)'}}
+                                >
+                                    <div className="text-center">
+                                        <div className="text-4xl mb-4">❓</div>
+                                        <p className="text-lg font-semibold">{card.front}</p>
+                                    </div>
+                                </div>
+                                <div 
+                                    className={`flip-card-back shadow-lg text-white`}
+                                    style={{backgroundColor: 'var(--bcg-green)'}}
+                                >
+                                    <div className="text-center">
+                                        <div className="text-4xl mb-4">💡</div>
+                                        <p className="text-base">{card.back}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
+        // Quiz Tab Component
+        function QuizTab({ content, darkMode, language, topicId, quizResults, setQuizResults }) {
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [selectedAnswer, setSelectedAnswer] = useState(null);
+            const [showResult, setShowResult] = useState(false);
+            const [score, setScore] = useState(0);
+            const [answeredQuestions, setAnsweredQuestions] = useState([]);
+
+            const question = content.questions[currentQuestion];
+
+            const handleAnswer = (optionIndex) => {
+                if (showResult) return;
+                
+                setSelectedAnswer(optionIndex);
+                setShowResult(true);
+                
+                const isCorrect = optionIndex === question.correct;
+                if (isCorrect) {
+                    setScore(score + 1);
+                }
+                
+                setAnsweredQuestions([...answeredQuestions, {
+                    question: currentQuestion,
+                    correct: isCorrect
+                }]);
+            };
+
+            const handleNext = () => {
+                if (currentQuestion < content.questions.length - 1) {
+                    setCurrentQuestion(currentQuestion + 1);
+                    setSelectedAnswer(null);
+                    setShowResult(false);
+                } else {
+                    const result = {
+                        score,
+                        total: content.questions.length,
+                        date: new Date().toISOString()
+                    };
+                    setQuizResults({...quizResults, [topicId]: result});
+                }
+            };
+
+            const handleReset = () => {
+                setCurrentQuestion(0);
+                setSelectedAnswer(null);
+                setShowResult(false);
+                setScore(0);
+                setAnsweredQuestions([]);
+            };
+
+            const showNextTwo = currentQuestion < content.questions.length - 2;
+
+            if (currentQuestion >= content.questions.length) {
+                return (
+                    <div className={`${darkMode ? 'bg-dark-surface' : 'bg-light-surface'} rounded-xl p-8 shadow-lg animate-fade-in-up text-center`}>
+                        <div className="text-6xl mb-6">🎉</div>
+                        <h3 className="text-3xl font-bold mb-4">{language === 'en' ? 'Quiz Complete!' : '測驗完成！'}</h3>
+                        <p className="text-2xl mb-8">
+                            {language === 'en' ? 'Your Score:' : '您的分數：'} 
+                            <span className="font-bold ml-2" style={{color: 'var(--accent)'}}>{score}/{content.questions.length}</span>
+                        </p>
+                        <button
+                            onClick={handleReset}
+                            className="px-8 py-3 rounded-lg text-white font-semibold hover:opacity-90 transition-all"
+                            style={{backgroundColor: 'var(--bcg-green)'}}
+                        >
+                            {language === 'en' ? 'Try Again' : '再試一次'}
+                        </button>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="animate-fade-in-up stagger-2">
+                    <div className={`${darkMode ? 'bg-dark-surface' : 'bg-light-surface'} rounded-xl p-8 shadow-lg mb-6`}>
+                        <div className="flex justify-between items-center mb-6">
+                            <span className="text-sm opacity-60">
+                                {language === 'en' ? 'Question' : '題目'} {currentQuestion + 1} / {content.questions.length}
+                            </span>
+                            <span className="text-sm opacity-60">
+                                {language === 'en' ? 'Score:' : '分數：'} {score}
+                            </span>
+                        </div>
+
+                        <div className="mb-4 h-2 bg-gray-700 rounded-full overflow-hidden">
+                            <div 
+                                className="progress-bar h-full transition-all duration-500"
+                                style={{
+                                    width: `${((currentQuestion + 1) / content.questions.length) * 100}%`,
+                                    backgroundColor: 'var(--accent)'
+                                }}
+                            />
+                        </div>
+
+                        <h3 className="text-xl md:text-2xl font-semibold mb-8">{question.question}</h3>
+
+                        <div className="space-y-3">
+                            {question.options.map((option, index) => {
+                                let buttonClass = `quiz-option w-full text-left px-6 py-4 rounded-lg border-2 transition-all ${
+                                    darkMode ? 'border-gray-700' : 'border-gray-300'
+                                }`;
+                                
+                                if (showResult) {
+                                    if (index === question.correct) {
+                                        buttonClass += ' correct';
+                                    } else if (index === selectedAnswer && index !== question.correct) {
+                                        buttonClass += ' incorrect';
+                                    }
+                                }
+
+                                return (
+                                    <button
+                                        key={index}
+                                        onClick={() => handleAnswer(index)}
+                                        disabled={showResult}
+                                        className={buttonClass}
+                                    >
+                                        <span className="font-medium">{String.fromCharCode(65 + index)}.</span> {option}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {showResult && (
+                            <div className="mt-6 flex justify-center space-x-4">
+                                {showNextTwo && (
+                                    <button
+                                        onClick={() => {
+                                            handleNext();
+                                            setTimeout(handleNext, 100);
+                                        }}
+                                        className="px-6 py-3 rounded-lg border-2 font-semibold hover:opacity-90 transition-all"
+                                        style={{borderColor: 'var(--bcg-green)', color: 'var(--bcg-green)'}}
+                                    >
+                                        {language === 'en' ? 'Show Next Two' : '顯示下兩題'}
+                                    </button>
+                                )}
+                                <button
+                                    onClick={handleNext}
+                                    className="px-6 py-3 rounded-lg text-white font-semibold hover:opacity-90 transition-all"
+                                    style={{backgroundColor: 'var(--bcg-green)'}}
+                                >
+                                    {currentQuestion < content.questions.length - 1 
+                                        ? (language === 'en' ? 'Next Question' : '下一題')
+                                        : (language === 'en' ? 'Finish' : '完成')
+                                    }
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // Dashboard Component
+        function Dashboard({ onClose, progress, quizResults, darkMode, language }) {
+            const [userInfo, setUserInfo] = useState({
+                group: '',
+                major: '',
+                name: ''
+            });
+
+            const handleExport = () => {
+                if (!userInfo.group || !userInfo.major || !userInfo.name) {
+                    alert(language === 'en' 
+                        ? 'Please fill in all user information before exporting.' 
+                        : '請先填寫所有使用者資訊再匯出。');
+                    return;
+                }
+
+                const csvContent = [
+                    ['Group', 'Major', 'Student Name', 'Topic', 'Score', 'Total', 'Percentage', 'Date'],
+                    ...Object.entries(quizResults).map(([topicId, result]) => [
+                        userInfo.group,
+                        userInfo.major,
+                        userInfo.name,
+                        `Topic ${topicId}`,
+                        result.score,
+                        result.total,
+                        `${((result.score / result.total) * 100).toFixed(1)}%`,
+                        new Date(result.date).toLocaleDateString()
+                    ])
+                ].map(row => row.join(',')).join('\n');
+
+                const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `SMMC_${userInfo.group}_${userInfo.major}_${userInfo.name.replace(/\s+/g, '_')}.csv`;
+                a.click();
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+                    <div className={`${darkMode ? 'bg-dark-surface border-2 border-gray-700' : 'bg-white border-2 border-gray-200'} rounded-xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl`}>
+                        <div className="flex justify-between items-center mb-6 pb-4 border-b" style={{borderColor: darkMode ? '#374151' : '#e5e7eb'}}>
+                            <h2 className="text-3xl font-bold display-font flex items-center" style={{color: darkMode ? '#00bfa5' : '#004d40'}}>
+                                📊 {language === 'en' ? 'Learning Dashboard' : '學習儀表板'}
+                            </h2>
+                            <button onClick={onClose} className="text-3xl hover:opacity-70 transition-all" style={{color: darkMode ? '#00bfa5' : '#004d40'}}>×</button>
+                        </div>
+
+                        {/* User Information Section */}
+                        <div className="mb-8">
+                            <h3 className="text-xl font-semibold mb-4 flex items-center">
+                                <span className="mr-2">👤</span>
+                                {language === 'en' ? 'Student Information' : '學生資訊'}
+                            </h3>
+                            <div className="grid md:grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-2 opacity-80">
+                                        {language === 'en' ? 'Group' : '組別'}
+                                    </label>
+                                    <select
+                                        value={userInfo.group}
+                                        onChange={(e) => setUserInfo({...userInfo, group: e.target.value})}
+                                        className={`w-full px-4 py-3 rounded-lg border-2 ${
+                                            darkMode ? 'bg-dark-bg border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
+                                        } focus:outline-none focus:border-bcg-accent`}
+                                    >
+                                        <option value="">{language === 'en' ? 'Select Group' : '選擇組別'}</option>
+                                        <option value="G1">G1</option>
+                                        <option value="G2">G2</option>
+                                        <option value="G3">G3</option>
+                                        <option value="G4">G4</option>
+                                        <option value="G5">G5</option>
+                                        <option value="G6">G6</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2 opacity-80">
+                                        {language === 'en' ? 'Major/Year' : '系級'}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={userInfo.major}
+                                        onChange={(e) => setUserInfo({...userInfo, major: e.target.value})}
+                                        placeholder="e.g., IPCM3"
+                                        className={`w-full px-4 py-3 rounded-lg border-2 ${
+                                            darkMode ? 'bg-dark-bg border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                                        } focus:outline-none focus:border-bcg-accent`}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2 opacity-80">
+                                        {language === 'en' ? 'Name' : '姓名'}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={userInfo.name}
+                                        onChange={(e) => setUserInfo({...userInfo, name: e.target.value})}
+                                        placeholder="e.g., Jeremy Wang"
+                                        className={`w-full px-4 py-3 rounded-lg border-2 ${
+                                            darkMode ? 'bg-dark-bg border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                                        } focus:outline-none focus:border-bcg-accent`}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Quiz Results Section */}
+                        <div className="mb-8">
+                            <h3 className="text-xl font-semibold mb-4 flex items-center">
+                                <span className="mr-2">📈</span>
+                                {language === 'en' ? 'Quiz Results' : '測驗成績'}
+                            </h3>
+                            {Object.keys(quizResults).length === 0 ? (
+                                <div className={`p-6 rounded-lg text-center ${darkMode ? 'bg-dark-bg border border-gray-700' : 'bg-gray-50 border border-gray-200'}`}>
+                                    <p className="opacity-60">{language === 'en' ? 'No quiz results yet. Complete a quiz to see your progress!' : '尚無測驗成績。完成測驗以查看您的進度！'}</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {Object.entries(quizResults).map(([topicId, result]) => {
+                                        const percentage = (result.score / result.total) * 100;
+                                        return (
+                                            <div key={topicId} className={`p-5 rounded-lg bcg-card ${darkMode ? 'bg-dark-bg border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                                                <div className="flex justify-between items-center mb-3">
+                                                    <span className="font-semibold text-lg">
+                                                        {language === 'en' ? 'Topic' : '主題'} {topicId}
+                                                    </span>
+                                                    <div className="text-right">
+                                                        <span className="font-bold text-xl" style={{color: 'var(--bcg-accent)'}}>
+                                                            {result.score}/{result.total}
+                                                        </span>
+                                                        <span className="ml-2 text-sm opacity-70">
+                                                            ({percentage.toFixed(0)}%)
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
+                                                    <div 
+                                                        className="h-full transition-all duration-500"
+                                                        style={{
+                                                            width: `${percentage}%`,
+                                                            backgroundColor: percentage >= 70 ? 'var(--bcg-accent)' : percentage >= 50 ? '#ffa726' : '#ef5350'
+                                                        }}
+                                                    />
+                                                </div>
+                                                <p className="text-xs opacity-60 mt-2">
+                                                    {new Date(result.date).toLocaleDateString()} {new Date(result.date).toLocaleTimeString()}
+                                                </p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        {Object.keys(quizResults).length > 0 && (
+                            <div className="flex justify-center">
+                                <button
+                                    onClick={handleExport}
+                                    disabled={!userInfo.group || !userInfo.major || !userInfo.name}
+                                    className="px-8 py-4 rounded-lg text-white font-semibold hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                                    style={{backgroundColor: 'var(--bcg-green)'}}
+                                >
+                                    <span className="mr-2">📥</span>
+                                    {language === 'en' ? 'Export Learning Record (CSV)' : '匯出學習紀錄 (CSV)'}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // AI Assistant Component
+        function AIAssistant({ onClose, darkMode, language, courseData }) {
+            const [messages, setMessages] = useState([
+                {
+                    role: 'assistant',
+                    content: language === 'en' 
+                        ? 'Hello! I\'m your AI Teaching Assistant. I can help you understand concepts from the course materials. What would you like to know?'
+                        : '您好！我是您的 AI 助教。我可以幫助您理解課程資料中的概念。您想了解什麼？'
+                }
+            ]);
+            const [input, setInput] = useState('');
+            const [isTyping, setIsTyping] = useState(false);
+
+            const handleSend = useCallback(() => {
+                const trimmedInput = input.trim();
+                if (!trimmedInput) return;
+
+                console.log('Sending message:', trimmedInput); // Debug log
+
+                const userInput = trimmedInput;
+                const userMessage = { role: 'user', content: userInput };
+                
+                setMessages(prev => [...prev, userMessage]);
+                setInput('');
+                setIsTyping(true);
+
+                // Simple keyword matching for demo purposes
+                setTimeout(() => {
+                    const lowerInput = userInput.toLowerCase();
+                    let response = language === 'en'
+                        ? 'I can help you with concepts related to strategy, governance, value creation, and business models. Could you be more specific?'
+                        : '我可以幫助您理解與策略、治理、價值創造和商業模式相關的概念。您能更具體說明嗎？';
+
+                    if (lowerInput.includes('strategy') || lowerInput.includes('策略')) {
+                        response = language === 'en'
+                            ? 'Strategy is the quest for superior performance through sustainable competitive advantage. It involves both corporate strategy (where to compete) and business strategy (how to compete). Corporate strategy determines which industries and markets to enter, while business strategy focuses on how to achieve competitive advantage within chosen markets.'
+                            : '策略是透過可持續競爭優勢追求卓越績效的過程。它包括企業策略（在哪競爭）和事業策略（如何競爭）。企業策略決定進入哪些產業和市場，而事業策略專注於如何在選定市場中達成競爭優勢。';
+                    } else if (lowerInput.includes('governance') || lowerInput.includes('治理')) {
+                        response = language === 'en'
+                            ? 'Corporate governance involves mechanisms to align management decisions with stakeholder interests. It includes internal mechanisms (board of directors, executive compensation, ownership structure) and external mechanisms (market for corporate control, legal/regulatory framework, product market competition).'
+                            : '公司治理涉及使管理決策與利害關係人利益一致的機制。它包括內部機制（董事會、高階主管薪酬、所有權結構）和外部機制（企業控制權市場、法律／監管架構、產品市場競爭）。';
+                    } else if (lowerInput.includes('vpc') || lowerInput.includes('value') || lowerInput.includes('價值') || lowerInput.includes('wtp') || lowerInput.includes('願付')) {
+                        response = language === 'en'
+                            ? 'The V-P-C framework analyzes value creation (V-C) and value capture. V is willingness-to-pay (WTP), P is price, C is cost. Consumer surplus = V-P (what customers gain), Producer surplus = P-C (firm profit). Total value created = V-C.'
+                            : 'V-P-C架構分析價值創造（V-C）和價值擷取。V是願付價格（WTP），P是價格，C是成本。消費者剩餘 = V-P（顧客獲得的價值），生產者剩餘 = P-C（企業利潤）。總創造價值 = V-C。';
+                    } else if (lowerInput.includes('business model') || lowerInput.includes('商業模式')) {
+                        response = language === 'en'
+                            ? 'The Business Model Canvas consists of 9 building blocks: customer segments, value propositions, channels, customer relationships, revenue streams, key resources, key activities, key partnerships, and cost structure. It helps visualize how organizations create, deliver, and capture value.'
+                            : '商業模式圖包含 9 個構成要素：目標客層、價值主張、通路、顧客關係、收益流、關鍵資源、關鍵活動、關鍵夥伴和成本結構。它有助於視覺化組織如何創造、交付和擷取價值。';
+                    } else if (lowerInput.includes('agency') || lowerInput.includes('代理')) {
+                        response = language === 'en'
+                            ? 'Agency problems occur when managers\' interests diverge from shareholders\' interests, potentially leading to decisions that benefit management rather than owners. This is addressed through governance mechanisms like board oversight and performance-based compensation.'
+                            : '代理問題發生在經理人利益與股東利益分歧時，可能導致有利於管理階層而非所有者的決策。這可透過董事會監督和績效導向薪酬等治理機制來解決。';
+                    }
+
+                    console.log('Sending response:', response); // Debug log
+                    setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+                    setIsTyping(false);
+                }, 500);
+            }, [input, language]);
+
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+                    <div className={`${darkMode ? 'bg-dark-surface border-2 border-gray-700' : 'bg-white border-2 border-gray-200'} rounded-xl w-full max-w-2xl flex flex-col shadow-2xl`} style={{height: '600px'}}>
+                        <div className="flex justify-between items-center p-6 border-b" style={{borderColor: darkMode ? '#374151' : '#e5e7eb'}}>
+                            <h2 className="text-2xl font-bold display-font" style={{color: darkMode ? '#00bfa5' : '#004d40'}}>🤖 {language === 'en' ? 'AI Teaching Assistant' : 'AI 助教'}</h2>
+                            <button onClick={onClose} className="text-3xl hover:opacity-70 transition-all" style={{color: darkMode ? '#00bfa5' : '#004d40'}}>×</button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                            {messages.map((msg, index) => (
+                                <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div 
+                                        className={`max-w-[80%] p-4 rounded-lg ${
+                                            msg.role === 'user'
+                                                ? 'text-white'
+                                                : darkMode ? 'bg-dark-bg border border-gray-700 text-white' : 'bg-gray-100 border border-gray-200 text-gray-900'
+                                        }`}
+                                        style={msg.role === 'user' ? {backgroundColor: 'var(--bcg-green)'} : {}}
+                                    >
+                                        {msg.content}
+                                    </div>
+                                </div>
+                            ))}
+                            {isTyping && (
+                                <div className="flex justify-start">
+                                    <div className={`p-4 rounded-lg ${darkMode ? 'bg-dark-bg border border-gray-700' : 'bg-gray-100 border border-gray-200'}`}>
+                                        <span className="animate-pulse">輸入中...</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="p-6 border-t" style={{borderColor: darkMode ? '#374151' : '#e5e7eb'}}>
+                            <div className="flex space-x-2">
+                                <input
+                                    type="text"
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                                    placeholder={language === 'en' ? 'Ask a question...' : '提出問題...'}
+                                    className={`flex-1 px-4 py-3 rounded-lg border-2 ${
+                                        darkMode ? 'bg-dark-bg border-gray-600 text-white placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                                    } focus:outline-none focus:border-bcg-accent`}
+                                />
+                                <button
+                                    onClick={handleSend}
+                                    disabled={!input.trim()}
+                                    className="px-6 py-3 rounded-lg text-white font-semibold hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    style={{backgroundColor: 'var(--bcg-green)'}}
+                                >
+                                    {language === 'en' ? 'Send' : '發送'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Floating Buttons Component
+        function FloatingButtons({ onShowAI, darkMode, isTTSActive, onStopTTS }) {
+            return (
+                <div className="fixed bottom-8 right-8 flex flex-col space-y-3 z-40">
+                    {isTTSActive && (
+                        <button
+                            onClick={onStopTTS}
+                            className="p-4 rounded-full shadow-2xl hover:scale-110 transition-transform text-white animate-pulse"
+                            style={{backgroundColor: '#ef5350'}}
+                            title="停止朗讀 / Stop Reading"
+                        >
+                            <span className="text-2xl">⏸️</span>
+                        </button>
+                    )}
+                    <button
+                        onClick={onShowAI}
+                        className="p-4 rounded-full shadow-2xl hover:scale-110 transition-transform text-white"
+                        style={{backgroundColor: 'var(--bcg-green)'}}
+                        title="AI 助教 / AI Assistant"
+                    >
+                        <span className="text-2xl">🤖</span>
+                    </button>
+                </div>
+            );
+        }
+
+        // Footer Component
+        function Footer({ darkMode, language }) {
+            return (
+                <footer className={`w-full py-6 border-t ${darkMode ? 'border-gray-700 bg-dark-surface' : 'border-gray-300 bg-light-surface'}`}>
+                    <div className="max-w-7xl mx-auto px-4 text-center space-y-2">
+                        <p className="font-semibold text-base" style={{color: darkMode ? '#00bfa5' : '#004d40'}}>
+                            {language === 'en' ? 'Strategic Management of Multinational Corporations' : '國際策略管理'}
+                        </p>
+                        <p className={`text-xs ${darkMode ? 'opacity-70' : 'opacity-60'}`}>
+                            SMMC - Strategic Management of Multinational Corporations
+                        </p>
+                        <p className="text-xs">
+                            {language === 'en' ? 'Instructor' : '授課教師'}: <a 
+                                href="https://www.ibs.ncnu.edu.tw/index.php/faculty/tenured-professor/299-smlo" 
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:opacity-100 transition-all underline font-medium"
+                                style={{color: 'var(--bcg-accent)'}}
+                            >
+                                Prof. Shihmin Lo
+                            </a>
+                        </p>
+                        <p className={`text-xs ${darkMode ? 'opacity-50' : 'opacity-40'}`}>© 2025 SMMC Learning Platform | v1.0</p>
+                    </div>
+                </footer>
+            );
+        }
+
+        // Render the app
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
