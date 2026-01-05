@@ -1,343 +1,479 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { 
-    Menu, X, Sun, Moon, Languages, 
-    BarChart3, Play, Pause, ChevronDown, 
-    ChevronRight, ExternalLink, Globe, Target, 
-    Lightbulb, TrendingUp, Layers, CheckCircle2,
-    Briefcase, Puzzle, BookOpen, BrainCircuit, ArrowRight, RotateCcw,
-    User, Search, GraduationCap, Download, MessageSquare, Minimize2,
-    Video, Headphones, Link as LinkIcon
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMMC Learning Platform</title>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons (Vanilla) -->
+    <!-- Using specific version to ensure data structure stability -->
+    <script src="https://unpkg.com/lucide@0.292.0"></script>
 
-// --- 1. Course Data (Expanded based on Lecture Notes LN1-LN8) ---
-// Ensuring strictly: Strategy(策略), Case(個案), Channel(通路), Framework(架構)
-const COURSE_DATA = [
-    {
-        id: 'topic1',
-        icon: Target,
-        title: { en: "The Basics of Strategy & Governance", zh: "策略與公司治理基礎" },
-        insight: { en: "Strategy is not about doing things better, but doing things differently.", zh: "策略 (Strategy) 不在於做得更好，而在於做得不同 (Doing things differently)。" },
-        summary: {
-            points: [
-                { en: "Strategy defines long-term goals and resource allocation (Chandler, 1962).", zh: "策略定義了企業的長期目標與資源分配 (Chandler, 1962)。" },
-                { en: "Operational Effectiveness (doing better) is not Strategy (doing differently).", zh: "營運效能 (做得更好) 並非策略 (做得不同)。" },
-                { en: "Corporate Governance balances interests between shareholders and stakeholders.", zh: "公司治理 (Corporate Governance) 需在股東與利害關係人之間取得平衡。" }
-            ],
-            objectives: [
-                { en: "Distinguish between Corporate and Business Strategy.", zh: "區分公司層級策略 (Corporate Strategy) 與事業層級策略 (Business Strategy)。" },
-                { en: "Understand the Triple Bottom Line.", zh: "理解三重底線 (Triple Bottom Line)：利潤、人、地球。" }
-            ],
-            prep: { en: "Read Grant Ch.1; Case: Wal-Mart vs. Costco", zh: "閱讀 Grant 第一章；個案：Wal-Mart vs. Costco" }
-        },
-        content: [
-            {
-                type: "text",
-                en: "Strategy comes from the Greek 'strategia' (generalship). It gives coherence and direction to the organization. Michael Porter emphasizes that 'Operational Effectiveness' (doing similar activities better than rivals, e.g., TQM, Benchmarking) is necessary but not sufficient. 'Strategy' is about performing different activities or performing similar activities in different ways.",
-                zh: "策略 (Strategy) 源自希臘語 'strategia'（將領統御術）。Michael Porter 強調，「營運效能」(Operational Effectiveness，如全面品質管理、標竿學習) 雖必要但不足以構成策略。真正的策略在於執行「不同」的活動，或以「不同」的方式執行相似活動。"
-            },
-            {
-                type: "text",
-                en: "Sustainable Competitive Advantage requires unique positioning. If a firm only focuses on operational effectiveness, it leads to 'Competitive Convergence' where firms look alike and margins shrink. Strategy is fundamentally about making choices and trade-offs.",
-                zh: "永續競爭優勢 (Sustainable Competitive Advantage) 需要獨特的定位。若企業僅專注於營運效能，將導致「競爭趨同」(Competitive Convergence)，使產品同質化且利潤縮水。策略的核心在於「做出選擇」與「取捨」(Trade-offs)。"
-            },
-            {
-                type: "text",
-                en: "The Triple Bottom Line framework recommends companies focus on social, ecological, and economic concerns (People, Planet, Profit). In Chinese context, this translates to 'San Sheng You Xing': Production (Economic), Life (Social), and Ecology (Ecological).",
-                zh: "三重底線 (Triple Bottom Line) 架構建議企業同時關注社會、生態與經濟層面（人、地球、利潤）。在中文語境下，這被詮釋為「三生有幸」：生產 (經濟)、生活 (社會)、生態 (環境)。"
-            },
-            {
-                type: "glossary",
-                title: { en: "Principal-Agent Problem", zh: "代理人問題" },
-                desc: { en: "Conflicts arising when agents (managers) do not act in the best interest of principals (owners) due to information asymmetry.", zh: "當代理人（經理人）因資訊不對稱 (Information Asymmetry) 而未以委託人（股東）的最佳利益行事時所產生的利益衝突。" }
-            },
-            {
-                type: "glossary",
-                title: { en: "Stakeholder Approach", zh: "利害關係人途徑" },
-                desc: { en: "The view that the firm should serve the interests of all stakeholders, not just shareholders.", zh: "認為企業應服務所有利害關係人（員工、顧客、社區等）的利益，而非僅服務股東。" }
+    <!-- Custom Styles for Animations -->
+    <style>
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        html { scroll-behavior: smooth; }
+        
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
+        
+        @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in-up { animation: fade-in-up 0.4s ease-out forwards; }
+        
+        @keyframes scale-in { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .animate-scale-in { animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
+    
+    <!-- Tailwind Config for Colors if needed -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
             }
-        ],
-        media: [
-            { type: 'video', title: { en: 'Michael Porter on Strategy', zh: 'Michael Porter 談策略' }, url: 'https://www.youtube.com/results?search_query=Michael+Porter+Strategy' }
-        ],
-        cards: [
-            { front: { en: "Strategy vs. Tactics", zh: "策略 vs. 戰術" }, back: { en: "Strategy is long-term, hard to reverse; Tactics are short-term maneuvers.", zh: "策略是長期且難以逆轉的承諾；戰術是短期的操作與調度。" } },
-            { front: { en: "Operational Effectiveness", zh: "營運效能" }, back: { en: "Doing the same things better than rivals (e.g., Six Sigma). Not a strategy.", zh: "比競爭對手更好地做相同的事（如六標準差）。這不是策略。" } },
-            { front: { en: "Triple Bottom Line", zh: "三重底線" }, back: { en: "People, Planet, Profit (Social, Ecological, Economic).", zh: "人、地球、利潤（社會、生態、經濟）。" } },
-            { front: { en: "Corporate Strategy", zh: "公司層級策略" }, back: { en: "Where to compete? (Industry, geography, scope).", zh: "決定「在哪裡競爭」？（產業、地理區域、產品範疇）。" } },
-            { front: { en: "Business Strategy", zh: "事業層級策略" }, back: { en: "How to compete? (Cost vs. Differentiation).", zh: "決定「如何競爭」？（成本領導 vs. 差異化）。" } }
-        ],
-        quiz: [
-            { q: { en: "Operational effectiveness alone can sustain long-term advantage.", zh: "單靠營運效能即可維持長期的競爭優勢。" }, a: false },
-            { q: { en: "Strategy involves making trade-offs.", zh: "策略涉及做出取捨 (Trade-offs)。" }, a: true },
-            { q: { en: "The Triple Bottom Line includes Profit, People, and Politics.", zh: "三重底線包括利潤、人與政治。" }, a: false }
-        ]
-    },
-    {
-        id: 'topic2',
-        icon: Briefcase,
-        title: { en: "VPC Framework & Business Model", zh: "VPC 架構與商業模式" },
-        insight: { en: "Value is created by the firm but determined by the customer.", zh: "價值由企業創造，但由顧客決定。" },
-        summary: {
-            points: [
-                { en: "VPC Framework: Value (WTP) - Price - Cost.", zh: "VPC 架構：價值 (支付意願 WTP) - 價格 (P) - 成本 (C)。" },
-                { en: "Consumer Surplus = V - P; Producer Profit = P - C.", zh: "消費者剩餘 = V - P；生產者利潤 = P - C。" },
-                { en: "Business Model Canvas has 9 building blocks.", zh: "商業模式圖 (Business Model Canvas) 包含 9 個關鍵模組。" }
-            ],
-            objectives: [
-                { en: "Analyze competitive advantage using V-P-C.", zh: "使用 VPC 架構分析競爭優勢來源。" },
-                { en: "Map a business model using the Canvas.", zh: "使用畫布繪製商業模式。" }
-            ],
-            prep: { en: "Read Grant Ch.2; Review: Teach For America Vision", zh: "閱讀 Grant 第二章；複習：Teach For America 願景" }
-        },
-        content: [
-            {
-                type: "text",
-                en: "The Value-Price-Cost (VPC) Framework is fundamental. Value (V) is the customer's Willingness to Pay (WTP). Price (P) is the amount charged. Cost (C) is the production cost. Competitive advantage comes from maximizing the gap between V and C (V-C).",
-                zh: "價值-價格-成本 (VPC) 架構是基礎。價值 (V) 是顧客的支付意願 (WTP)。價格 (P) 是實際收費。成本 (C) 是生產成本。競爭優勢來自於最大化 V 與 C 之間的差距 (V-C)。"
-            },
-            {
-                type: "text",
-                en: "Strategic innovation often involves redefining the business model. For example, 'Product-Service Systems' (PSS) shift from selling products to selling usage/services (e.g., Rolls-Royce 'Power by the Hour').",
-                zh: "策略創新通常涉及重新定義商業模式。例如，「產品服務系統」(PSS) 從銷售產品轉變為銷售使用權或服務（如 Rolls-Royce 的「按飛行時數計費」引擎服務）。"
-            },
-            {
-                type: "glossary",
-                title: { en: "Business Model Canvas", zh: "商業模式圖" },
-                desc: { en: "9 Blocks: Customer Segments, Value Propositions, Channels, Customer Relationships, Revenue Streams, Key Resources, Key Activities, Key Partnerships, Cost Structure.", zh: "九大模組：目標客群、價值主張、通路、顧客關係、收益流、關鍵資源、關鍵活動、關鍵合作夥伴、成本結構。" }
-            },
-            {
-                type: "glossary",
-                title: { en: "Consumer Surplus", zh: "消費者剩餘" },
-                desc: { en: "The difference between what a consumer is willing to pay (V) and what they actually pay (P).", zh: "消費者願意支付的價格 (V) 與實際支付價格 (P) 之間的差額。" }
+        }
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+
+        // --- Icon Shim for Single File HTML (Fixed) ---
+        // Converts Lucide definitions to React Components safely
+        const LucideIcon = ({ iconNode, size = 24, className, ...props }) => {
+            // Safety check: ensure iconNode is an array before destructuring
+            if (!Array.isArray(iconNode)) return null;
+            
+            const [tag, attrs, children] = iconNode;
+            
+            return React.createElement(
+                tag,
+                {
+                    ...attrs,
+                    width: size,
+                    height: size,
+                    className: className,
+                    stroke: "currentColor",
+                    fill: "none",
+                    strokeWidth: 2,
+                    strokeLinecap: "round",
+                    strokeLinejoin: "round",
+                    ...props
+                },
+                Array.isArray(children) ? children.map((child, i) => {
+                    // Safety check for children nodes
+                    if (!Array.isArray(child)) return null;
+                    const [childTag, childAttrs] = child;
+                    return React.createElement(childTag, { ...childAttrs, key: i });
+                }) : null
+            );
+        };
+
+        // Ensure lucide global is available
+        const lucideIcons = (window.lucide && window.lucide.icons) ? window.lucide.icons : {};
+
+        // Helper to get icon component or fallback
+        const getIcon = (name) => {
+            if (lucideIcons[name]) {
+                return (props) => <LucideIcon iconNode={lucideIcons[name]} {...props} />;
             }
-        ],
-        media: [
-            { type: 'video', title: { en: 'Business Model Canvas Explained', zh: '商業模式圖解說' }, url: 'https://www.youtube.com/results?search_query=Business+Model+Canvas' }
-        ],
-        cards: [
-            { front: { en: "V - P", zh: "V - P" }, back: { en: "Consumer Surplus (Value - Price).", zh: "消費者剩餘 (價值 - 價格)。" } },
-            { front: { en: "P - C", zh: "P - C" }, back: { en: "Producer Profit (Price - Cost).", zh: "生產者利潤 (價格 - 成本)。" } },
-            { front: { en: "Willingness to Pay (WTP)", zh: "支付意願" }, back: { en: "The maximum price a customer is willing to pay (Value).", zh: "顧客願意支付的最高價格 (即 V)。" } },
-            { front: { en: "Value Proposition", zh: "價值主張" }, back: { en: "The bundle of products/services that create value for a specific segment.", zh: "為特定目標客群創造價值的產品/服務組合。" } },
-            { front: { en: "Channels", zh: "通路" }, back: { en: "How a company communicates with and reaches its customer segments.", zh: "公司如何溝通並接觸其目標客群。" } }
-        ],
-        quiz: [
-            { q: { en: "If Value > Price, the consumer surplus is positive.", zh: "如果價值 > 價格，則消費者剩餘為正。" }, a: true },
-            { q: { en: "Cost leadership primarily focuses on increasing V.", zh: "成本領導主要專注於增加 V (價值)。" }, a: false },
-            { q: { en: "A business model describes how an organization creates, delivers, and captures value.", zh: "商業模式描述組織如何創造、傳遞及獲取價值。" }, a: true }
-        ]
-    },
-    {
-        id: 'topic3',
-        icon: Globe,
-        title: { en: "Industry & Competitive Analysis", zh: "產業與競爭分析" },
-        insight: { en: "Industry structure drives profitability; understand the Five Forces.", zh: "產業結構驅動獲利能力；必須理解五力分析。" },
-        summary: {
-            points: [
-                { en: "PESTEL analysis scans the macro-environment.", zh: "PESTEL 分析用於掃描總體環境。" },
-                { en: "Porter's Five Forces determines industry attractiveness.", zh: "波特五力分析決定產業的吸引力 (Attractiveness)。" },
-                { en: "Strategic Groups map firms with similar strategies.", zh: "策略群組圖 (Strategic Groups) 描繪採用相似策略的廠商。" }
-            ],
-            objectives: [
-                { en: "Apply Five Forces to an industry case.", zh: "將五力分析應用於產業個案。" },
-                { en: "Identify Key Success Factors (KSFs).", zh: "辨識關鍵成功因素 (KSFs)。" }
-            ],
-            prep: { en: "Read Grant Ch.3-4; Case: Airline Industry", zh: "閱讀 Grant 第 3-4 章；個案：航空產業" }
-        },
-        content: [
+            // Fallback for missing icons to prevent crash
+            return (props) => <span style={{display:'inline-block', width: props.size || 24, height: props.size || 24, background: '#ccc', borderRadius: 4}} title={`Missing Icon: ${name}`} />;
+        };
+
+        // Map required icons
+        const Menu = getIcon('Menu');
+        const X = getIcon('X');
+        const Sun = getIcon('Sun');
+        const Moon = getIcon('Moon');
+        const Languages = getIcon('Languages');
+        const BarChart3 = getIcon('BarChart3');
+        const Play = getIcon('Play');
+        const Pause = getIcon('Pause');
+        const ChevronDown = getIcon('ChevronDown');
+        const ChevronRight = getIcon('ChevronRight');
+        const ExternalLink = getIcon('ExternalLink');
+        const Globe = getIcon('Globe');
+        const Target = getIcon('Target');
+        const Lightbulb = getIcon('Lightbulb');
+        const TrendingUp = getIcon('TrendingUp');
+        const Layers = getIcon('Layers');
+        const CheckCircle2 = getIcon('CheckCircle2');
+        const Briefcase = getIcon('Briefcase');
+        const Puzzle = getIcon('Puzzle');
+        const BookOpen = getIcon('BookOpen');
+        const BrainCircuit = getIcon('BrainCircuit');
+        const ArrowRight = getIcon('ArrowRight');
+        const RotateCcw = getIcon('RotateCcw');
+        const User = getIcon('User');
+        const Search = getIcon('Search');
+        const GraduationCap = getIcon('GraduationCap');
+        const Download = getIcon('Download');
+        const MessageSquare = getIcon('MessageSquare');
+        const Minimize2 = getIcon('Minimize2');
+        const Video = getIcon('Video');
+        const Headphones = getIcon('Headphones');
+        const LinkIcon = getIcon('Link');
+
+        // --- 1. Course Data ---
+        const COURSE_DATA = [
             {
-                type: "text",
-                en: "The PESTEL framework (Political, Economic, Social, Technological, Environmental, Legal) is used for macro-environmental scanning. Following this, Porter's Five Forces analysis evaluates industry profitability: 1. Threat of New Entrants, 2. Power of Suppliers, 3. Power of Buyers, 4. Threat of Substitutes, 5. Rivalry.",
-                zh: "PESTEL 架構 (政治、經濟、社會、科技、環境、法律) 用於總體環境掃描。接著，波特五力分析評估產業獲利能力：1. 新進入者的威脅、2. 供應商的議價能力、3. 買方的議價能力、4. 替代品的威脅、5. 敵對強度。"
+                id: 'topic1',
+                icon: Target,
+                title: { en: "The Basics of Strategy & Governance", zh: "策略與公司治理基礎" },
+                insight: { en: "Strategy is not about doing things better, but doing things differently.", zh: "策略 (Strategy) 不在於做得更好，而在於做得不同 (Doing things differently)。" },
+                summary: {
+                    points: [
+                        { en: "Strategy defines long-term goals and resource allocation (Chandler, 1962).", zh: "策略定義了企業的長期目標與資源分配 (Chandler, 1962)。" },
+                        { en: "Operational Effectiveness (doing better) is not Strategy (doing differently).", zh: "營運效能 (做得更好) 並非策略 (做得不同)。" },
+                        { en: "Corporate Governance balances interests between shareholders and stakeholders.", zh: "公司治理 (Corporate Governance) 需在股東與利害關係人之間取得平衡。" }
+                    ],
+                    objectives: [
+                        { en: "Distinguish between Corporate and Business Strategy.", zh: "區分公司層級策略 (Corporate Strategy) 與事業層級策略 (Business Strategy)。" },
+                        { en: "Understand the Triple Bottom Line.", zh: "理解三重底線 (Triple Bottom Line)：利潤、人、地球。" }
+                    ],
+                    prep: { en: "Read Grant Ch.1; Case: Wal-Mart vs. Costco", zh: "閱讀 Grant 第一章；個案：Wal-Mart vs. Costco" }
+                },
+                content: [
+                    {
+                        type: "text",
+                        en: "Strategy comes from the Greek 'strategia' (generalship). It gives coherence and direction to the organization. Michael Porter emphasizes that 'Operational Effectiveness' (doing similar activities better than rivals, e.g., TQM, Benchmarking) is necessary but not sufficient. 'Strategy' is about performing different activities or performing similar activities in different ways.",
+                        zh: "策略 (Strategy) 源自希臘語 'strategia'（將領統御術）。Michael Porter 強調，「營運效能」(Operational Effectiveness，如全面品質管理、標竿學習) 雖必要但不足以構成策略。真正的策略在於執行「不同」的活動，或以「不同」的方式執行相似活動。"
+                    },
+                    {
+                        type: "text",
+                        en: "Sustainable Competitive Advantage requires unique positioning. If a firm only focuses on operational effectiveness, it leads to 'Competitive Convergence' where firms look alike and margins shrink. Strategy is fundamentally about making choices and trade-offs.",
+                        zh: "永續競爭優勢 (Sustainable Competitive Advantage) 需要獨特的定位。若企業僅專注於營運效能，將導致「競爭趨同」(Competitive Convergence)，使產品同質化且利潤縮水。策略的核心在於「做出選擇」與「取捨」(Trade-offs)。"
+                    },
+                    {
+                        type: "text",
+                        en: "The Triple Bottom Line framework recommends companies focus on social, ecological, and economic concerns (People, Planet, Profit). In Chinese context, this translates to 'San Sheng You Xing': Production (Economic), Life (Social), and Ecology (Ecological).",
+                        zh: "三重底線 (Triple Bottom Line) 架構建議企業同時關注社會、生態與經濟層面（人、地球、利潤）。在中文語境下，這被詮釋為「三生有幸」：生產 (經濟)、生活 (社會)、生態 (環境)。"
+                    },
+                    {
+                        type: "glossary",
+                        title: { en: "Principal-Agent Problem", zh: "代理人問題" },
+                        desc: { en: "Conflicts arising when agents (managers) do not act in the best interest of principals (owners) due to information asymmetry.", zh: "當代理人（經理人）因資訊不對稱 (Information Asymmetry) 而未以委託人（股東）的最佳利益行事時所產生的利益衝突。" }
+                    },
+                    {
+                        type: "glossary",
+                        title: { en: "Stakeholder Approach", zh: "利害關係人途徑" },
+                        desc: { en: "The view that the firm should serve the interests of all stakeholders, not just shareholders.", zh: "認為企業應服務所有利害關係人（員工、顧客、社區等）的利益，而非僅服務股東。" }
+                    }
+                ],
+                media: [
+                    { type: 'video', title: { en: 'Michael Porter on Strategy', zh: 'Michael Porter 談策略' }, url: 'https://www.youtube.com/results?search_query=Michael+Porter+Strategy' }
+                ],
+                cards: [
+                    { front: { en: "Strategy vs. Tactics", zh: "策略 vs. 戰術" }, back: { en: "Strategy is long-term, hard to reverse; Tactics are short-term maneuvers.", zh: "策略是長期且難以逆轉的承諾；戰術是短期的操作與調度。" } },
+                    { front: { en: "Operational Effectiveness", zh: "營運效能" }, back: { en: "Doing the same things better than rivals (e.g., Six Sigma). Not a strategy.", zh: "比競爭對手更好地做相同的事（如六標準差）。這不是策略。" } },
+                    { front: { en: "Triple Bottom Line", zh: "三重底線" }, back: { en: "People, Planet, Profit (Social, Ecological, Economic).", zh: "人、地球、利潤（社會、生態、經濟）。" } },
+                    { front: { en: "Corporate Strategy", zh: "公司層級策略" }, back: { en: "Where to compete? (Industry, geography, scope).", zh: "決定「在哪裡競爭」？（產業、地理區域、產品範疇）。" } },
+                    { front: { en: "Business Strategy", zh: "事業層級策略" }, back: { en: "How to compete? (Cost vs. Differentiation).", zh: "決定「如何競爭」？（成本領導 vs. 差異化）。" } }
+                ],
+                quiz: [
+                    { q: { en: "Operational effectiveness alone can sustain long-term advantage.", zh: "單靠營運效能即可維持長期的競爭優勢。" }, a: false },
+                    { q: { en: "Strategy involves making trade-offs.", zh: "策略涉及做出取捨 (Trade-offs)。" }, a: true },
+                    { q: { en: "The Triple Bottom Line includes Profit, People, and Politics.", zh: "三重底線包括利潤、人與政治。" }, a: false }
+                ]
             },
             {
-                type: "text",
-                en: "Within an industry, Strategic Groups allow deeper analysis. Firms in the same group (e.g., Full-service vs. Low-cost airlines) compete more intensely. 'Mobility Barriers' are group-specific entry barriers that restrict movement between groups.",
-                zh: "在產業內部，策略群組 (Strategic Groups) 允許更深入的分析。同一群組內的廠商（例如：全服務航空 vs. 廉價航空）競爭最為激烈。「移動障礙」(Mobility Barriers) 是特定群組的進入障礙，限制廠商在群組間的移動。"
+                id: 'topic2',
+                icon: Briefcase,
+                title: { en: "VPC Framework & Business Model", zh: "VPC 架構與商業模式" },
+                insight: { en: "Value is created by the firm but determined by the customer.", zh: "價值由企業創造，但由顧客決定。" },
+                summary: {
+                    points: [
+                        { en: "VPC Framework: Value (WTP) - Price - Cost.", zh: "VPC 架構：價值 (支付意願 WTP) - 價格 (P) - 成本 (C)。" },
+                        { en: "Consumer Surplus = V - P; Producer Profit = P - C.", zh: "消費者剩餘 = V - P；生產者利潤 = P - C。" },
+                        { en: "Business Model Canvas has 9 building blocks.", zh: "商業模式圖 (Business Model Canvas) 包含 9 個關鍵模組。" }
+                    ],
+                    objectives: [
+                        { en: "Analyze competitive advantage using V-P-C.", zh: "使用 VPC 架構分析競爭優勢來源。" },
+                        { en: "Map a business model using the Canvas.", zh: "使用畫布繪製商業模式。" }
+                    ],
+                    prep: { en: "Read Grant Ch.2; Review: Teach For America Vision", zh: "閱讀 Grant 第二章；複習：Teach For America 願景" }
+                },
+                content: [
+                    {
+                        type: "text",
+                        en: "The Value-Price-Cost (VPC) Framework is fundamental. Value (V) is the customer's Willingness to Pay (WTP). Price (P) is the amount charged. Cost (C) is the production cost. Competitive advantage comes from maximizing the gap between V and C (V-C).",
+                        zh: "價值-價格-成本 (VPC) 架構是基礎。價值 (V) 是顧客的支付意願 (WTP)。價格 (P) 是實際收費。成本 (C) 是生產成本。競爭優勢來自於最大化 V 與 C 之間的差距 (V-C)。"
+                    },
+                    {
+                        type: "text",
+                        en: "Strategic innovation often involves redefining the business model. For example, 'Product-Service Systems' (PSS) shift from selling products to selling usage/services (e.g., Rolls-Royce 'Power by the Hour').",
+                        zh: "策略創新通常涉及重新定義商業模式。例如，「產品服務系統」(PSS) 從銷售產品轉變為銷售使用權或服務（如 Rolls-Royce 的「按飛行時數計費」引擎服務）。"
+                    },
+                    {
+                        type: "glossary",
+                        title: { en: "Business Model Canvas", zh: "商業模式圖" },
+                        desc: { en: "9 Blocks: Customer Segments, Value Propositions, Channels, Customer Relationships, Revenue Streams, Key Resources, Key Activities, Key Partnerships, Cost Structure.", zh: "九大模組：目標客群、價值主張、通路、顧客關係、收益流、關鍵資源、關鍵活動、關鍵合作夥伴、成本結構。" }
+                    },
+                    {
+                        type: "glossary",
+                        title: { en: "Consumer Surplus", zh: "消費者剩餘" },
+                        desc: { en: "The difference between what a consumer is willing to pay (V) and what they actually pay (P).", zh: "消費者願意支付的價格 (V) 與實際支付價格 (P) 之間的差額。" }
+                    }
+                ],
+                media: [
+                    { type: 'video', title: { en: 'Business Model Canvas Explained', zh: '商業模式圖解說' }, url: 'https://www.youtube.com/results?search_query=Business+Model+Canvas' }
+                ],
+                cards: [
+                    { front: { en: "V - P", zh: "V - P" }, back: { en: "Consumer Surplus (Value - Price).", zh: "消費者剩餘 (價值 - 價格)。" } },
+                    { front: { en: "P - C", zh: "P - C" }, back: { en: "Producer Profit (Price - Cost).", zh: "生產者利潤 (價格 - 成本)。" } },
+                    { front: { en: "Willingness to Pay (WTP)", zh: "支付意願" }, back: { en: "The maximum price a customer is willing to pay (Value).", zh: "顧客願意支付的最高價格 (即 V)。" } },
+                    { front: { en: "Value Proposition", zh: "價值主張" }, back: { en: "The bundle of products/services that create value for a specific segment.", zh: "為特定目標客群創造價值的產品/服務組合。" } },
+                    { front: { en: "Channels", zh: "通路" }, back: { en: "How a company communicates with and reaches its customer segments.", zh: "公司如何溝通並接觸其目標客群。" } }
+                ],
+                quiz: [
+                    { q: { en: "If Value > Price, the consumer surplus is positive.", zh: "如果價值 > 價格，則消費者剩餘為正。" }, a: true },
+                    { q: { en: "Cost leadership primarily focuses on increasing V.", zh: "成本領導主要專注於增加 V (價值)。" }, a: false },
+                    { q: { en: "A business model describes how an organization creates, delivers, and captures value.", zh: "商業模式描述組織如何創造、傳遞及獲取價值。" }, a: true }
+                ]
             },
             {
-                type: "glossary",
-                title: { en: "Key Success Factors (KSFs)", zh: "關鍵成功因素" },
-                desc: { en: "Prerequisites for success in an industry; what customers want and how the firm survives competition.", zh: "在產業中成功的先決條件；包含顧客想要什麼，以及廠商如何存活。" }
+                id: 'topic3',
+                icon: Globe,
+                title: { en: "Industry & Competitive Analysis", zh: "產業與競爭分析" },
+                insight: { en: "Industry structure drives profitability; understand the Five Forces.", zh: "產業結構驅動獲利能力；必須理解五力分析。" },
+                summary: {
+                    points: [
+                        { en: "PESTEL analysis scans the macro-environment.", zh: "PESTEL 分析用於掃描總體環境。" },
+                        { en: "Porter's Five Forces determines industry attractiveness.", zh: "波特五力分析決定產業的吸引力 (Attractiveness)。" },
+                        { en: "Strategic Groups map firms with similar strategies.", zh: "策略群組圖 (Strategic Groups) 描繪採用相似策略的廠商。" }
+                    ],
+                    objectives: [
+                        { en: "Apply Five Forces to an industry case.", zh: "將五力分析應用於產業個案。" },
+                        { en: "Identify Key Success Factors (KSFs).", zh: "辨識關鍵成功因素 (KSFs)。" }
+                    ],
+                    prep: { en: "Read Grant Ch.3-4; Case: Airline Industry", zh: "閱讀 Grant 第 3-4 章；個案：航空產業" }
+                },
+                content: [
+                    {
+                        type: "text",
+                        en: "The PESTEL framework (Political, Economic, Social, Technological, Environmental, Legal) is used for macro-environmental scanning. Following this, Porter's Five Forces analysis evaluates industry profitability: 1. Threat of New Entrants, 2. Power of Suppliers, 3. Power of Buyers, 4. Threat of Substitutes, 5. Rivalry.",
+                        zh: "PESTEL 架構 (政治、經濟、社會、科技、環境、法律) 用於總體環境掃描。接著，波特五力分析評估產業獲利能力：1. 新進入者的威脅、2. 供應商的議價能力、3. 買方的議價能力、4. 替代品的威脅、5. 敵對強度。"
+                    },
+                    {
+                        type: "text",
+                        en: "Within an industry, Strategic Groups allow deeper analysis. Firms in the same group (e.g., Full-service vs. Low-cost airlines) compete more intensely. 'Mobility Barriers' are group-specific entry barriers that restrict movement between groups.",
+                        zh: "在產業內部，策略群組 (Strategic Groups) 允許更深入的分析。同一群組內的廠商（例如：全服務航空 vs. 廉價航空）競爭最為激烈。「移動障礙」(Mobility Barriers) 是特定群組的進入障礙，限制廠商在群組間的移動。"
+                    },
+                    {
+                        type: "glossary",
+                        title: { en: "Key Success Factors (KSFs)", zh: "關鍵成功因素" },
+                        desc: { en: "Prerequisites for success in an industry; what customers want and how the firm survives competition.", zh: "在產業中成功的先決條件；包含顧客想要什麼，以及廠商如何存活。" }
+                    },
+                    {
+                        type: "glossary",
+                        title: { en: "Mobility Barrier", zh: "移動障礙" },
+                        desc: { en: "Factors that inhibit the movement of firms between strategic groups.", zh: "阻礙廠商在策略群組之間移動的因素。" }
+                    }
+                ],
+                media: [
+                    { type: 'video', title: { en: 'Porter\'s Five Forces', zh: '波特五力分析詳解' }, url: 'https://www.youtube.com/results?search_query=Porter+Five+Forces' }
+                ],
+                cards: [
+                    { front: { en: "Substitute", zh: "替代品" }, back: { en: "A product from a DIFFERENT industry that satisfies the same need.", zh: "來自「不同」產業但滿足相同需求的產品。" } },
+                    { front: { en: "Switching Costs", zh: "轉換成本" }, back: { en: "Costs that make customers reluctant to switch to another product.", zh: "讓顧客不願轉換到其他產品的成本（包含金錢、時間、心理）。" } },
+                    { front: { en: "Strategic Group", zh: "策略群組" }, back: { en: "A cluster of firms in an industry with similar strategies.", zh: "產業中採取相似策略的一群廠商。" } },
+                    { front: { en: "PESTEL", zh: "PESTEL" }, back: { en: "Political, Economic, Social, Technological, Environmental, Legal.", zh: "政治、經濟、社會、科技、環境、法律。" } },
+                    { front: { en: "Rivalry", zh: "敵對強度" }, back: { en: "High when many competitors, slow growth, high fixed costs.", zh: "當競爭者眾多、成長緩慢、固定成本高時，敵對強度高。" } }
+                ],
+                quiz: [
+                    { q: { en: "A high threat of substitutes increases industry profitability.", zh: "替代品威脅高會增加產業獲利能力。" }, a: false },
+                    { q: { en: "Strategic groups are clusters of firms with similar strategies.", zh: "策略群組是具有相似策略的廠商集群。" }, a: true },
+                    { q: { en: "Suppliers have high power if there are many substitutes for their input.", zh: "如果有許多替代投入品，供應商就擁有高權力。" }, a: false }
+                ]
             },
             {
-                type: "glossary",
-                title: { en: "Mobility Barrier", zh: "移動障礙" },
-                desc: { en: "Factors that inhibit the movement of firms between strategic groups.", zh: "阻礙廠商在策略群組之間移動的因素。" }
-            }
-        ],
-        media: [
-            { type: 'video', title: { en: 'Porter\'s Five Forces', zh: '波特五力分析詳解' }, url: 'https://www.youtube.com/results?search_query=Porter+Five+Forces' }
-        ],
-        cards: [
-            { front: { en: "Substitute", zh: "替代品" }, back: { en: "A product from a DIFFERENT industry that satisfies the same need.", zh: "來自「不同」產業但滿足相同需求的產品。" } },
-            { front: { en: "Switching Costs", zh: "轉換成本" }, back: { en: "Costs that make customers reluctant to switch to another product.", zh: "讓顧客不願轉換到其他產品的成本（包含金錢、時間、心理）。" } },
-            { front: { en: "Strategic Group", zh: "策略群組" }, back: { en: "A cluster of firms in an industry with similar strategies.", zh: "產業中採取相似策略的一群廠商。" } },
-            { front: { en: "PESTEL", zh: "PESTEL" }, back: { en: "Political, Economic, Social, Technological, Environmental, Legal.", zh: "政治、經濟、社會、科技、環境、法律。" } },
-            { front: { en: "Rivalry", zh: "敵對強度" }, back: { en: "High when many competitors, slow growth, high fixed costs.", zh: "當競爭者眾多、成長緩慢、固定成本高時，敵對強度高。" } }
-        ],
-        quiz: [
-            { q: { en: "A high threat of substitutes increases industry profitability.", zh: "替代品威脅高會增加產業獲利能力。" }, a: false },
-            { q: { en: "Strategic groups are clusters of firms with similar strategies.", zh: "策略群組是具有相似策略的廠商集群。" }, a: true },
-            { q: { en: "Suppliers have high power if there are many substitutes for their input.", zh: "如果有許多替代投入品，供應商就擁有高權力。" }, a: false }
-        ]
-    },
-    {
-        id: 'topic4',
-        icon: Puzzle,
-        title: { en: "Co-opetition & Dynamics", zh: "競合策略與競爭動態" },
-        insight: { en: "Business is War and Peace; use Game Theory to shape the Value Net.", zh: "商場即戰場亦是和平；運用賽局理論 (Game Theory) 塑造價值網。" },
-        summary: {
-            points: [
-                { en: "Co-opetition = Cooperation + Competition.", zh: "競合 (Co-opetition) = 合作 + 競爭。" },
-                { en: "The Value Net adds Complementors to the Five Forces.", zh: "價值網 (Value Net) 在五力之外增加了互補者 (Complementors)。" },
-                { en: "AMC Framework: Awareness, Motivation, Capability.", zh: "AMC 架構：察覺 (Awareness)、動機 (Motivation)、能力 (Capability)。" }
-            ],
-            objectives: [
-                { en: "Identify Complementors in a business ecosystem.", zh: "辨識商業生態系統中的互補者。" },
-                { en: "Predict competitor reactions using AMC.", zh: "運用 AMC 預測競爭者反應。" }
-            ],
-            prep: { en: "Read Grant Ch.4; Concept: Zero-sum vs. Positive-sum", zh: "閱讀 Grant 第四章；觀念：零和 vs. 正和賽局" }
-        },
-        content: [
-            {
-                type: "text",
-                en: "Co-opetition (Brandenburger & Nalebuff) implies business is not always a zero-sum game. The Value Net introduces 'Complementors'—players whose products make your product MORE valuable (e.g., Apps for Smartphones). Competitors make yours LESS valuable. The 5 elements of Game Theory (PARTS): Players, Added values, Rules, Tactics, Scope.",
-                zh: "競合 (Co-opetition) 意味著商業不總是零和遊戲。價值網 (Value Net) 引入了「互補者」(Complementors)——其產品能讓你的產品「更」有價值的參與者（例如：硬體與軟體）。競爭者則讓你的產品價值降低。賽局理論五要素 (PARTS)：參與者、附加價值、規則、戰術、範疇。"
+                id: 'topic4',
+                icon: Puzzle,
+                title: { en: "Co-opetition & Dynamics", zh: "競合策略與競爭動態" },
+                insight: { en: "Business is War and Peace; use Game Theory to shape the Value Net.", zh: "商場即戰場亦是和平；運用賽局理論 (Game Theory) 塑造價值網。" },
+                summary: {
+                    points: [
+                        { en: "Co-opetition = Cooperation + Competition.", zh: "競合 (Co-opetition) = 合作 + 競爭。" },
+                        { en: "The Value Net adds Complementors to the Five Forces.", zh: "價值網 (Value Net) 在五力之外增加了互補者 (Complementors)。" },
+                        { en: "AMC Framework: Awareness, Motivation, Capability.", zh: "AMC 架構：察覺 (Awareness)、動機 (Motivation)、能力 (Capability)。" }
+                    ],
+                    objectives: [
+                        { en: "Identify Complementors in a business ecosystem.", zh: "辨識商業生態系統中的互補者。" },
+                        { en: "Predict competitor reactions using AMC.", zh: "運用 AMC 預測競爭者反應。" }
+                    ],
+                    prep: { en: "Read Grant Ch.4; Concept: Zero-sum vs. Positive-sum", zh: "閱讀 Grant 第四章；觀念：零和 vs. 正和賽局" }
+                },
+                content: [
+                    {
+                        type: "text",
+                        en: "Co-opetition (Brandenburger & Nalebuff) implies business is not always a zero-sum game. The Value Net introduces 'Complementors'—players whose products make your product MORE valuable (e.g., Apps for Smartphones). Competitors make yours LESS valuable. The 5 elements of Game Theory (PARTS): Players, Added values, Rules, Tactics, Scope.",
+                        zh: "競合 (Co-opetition) 意味著商業不總是零和遊戲。價值網 (Value Net) 引入了「互補者」(Complementors)——其產品能讓你的產品「更」有價值的參與者（例如：硬體與軟體）。競爭者則讓你的產品價值降低。賽局理論五要素 (PARTS)：參與者、附加價值、規則、戰術、範疇。"
+                    },
+                    {
+                        type: "text",
+                        en: "Competitive Dynamics uses the AMC Framework (Awareness, Motivation, Capability) to predict rivalry. A firm will not respond to an attack if it is unaware, lacks motivation, or lacks capability. Multi-market contact can lead to 'Mutual Forbearance'.",
+                        zh: "競爭動態使用 AMC 架構（察覺、動機、能力）來預測敵對行為。如果廠商沒有察覺、缺乏動機或沒有能力，它就不會對攻擊做出回應。多市場接觸 (Multi-market contact) 可能導致「相互容忍」(Mutual Forbearance)。"
+                    },
+                    {
+                        type: "glossary",
+                        title: { en: "Complementor", zh: "互補者" },
+                        desc: { en: "A player whose product enhances the value of your product (Cross-elasticity < 0).", zh: "其產品能提升你產品價值的參與者（交叉彈性為負）。" }
+                    },
+                    {
+                        type: "glossary",
+                        title: { en: "Zero-sum vs. Positive-sum", zh: "零和 vs. 正和" },
+                        desc: { en: "Zero-sum: One's gain is another's loss. Positive-sum: Total value grows (win-win).", zh: "零和：一方得即一方失。正和：總價值增加（雙贏）。" }
+                    }
+                ],
+                media: [],
+                cards: [
+                    { front: { en: "Value Net", zh: "價值網" }, back: { en: "Customers, Suppliers, Competitors, Complementors.", zh: "顧客、供應商、競爭者、互補者。" } },
+                    { front: { en: "AMC Framework", zh: "AMC 架構" }, back: { en: "Awareness, Motivation, Capability.", zh: "察覺、動機、能力 - 競爭行動的三大驅動力。" } },
+                    { front: { en: "PARTS (Game Theory)", zh: "PARTS (賽局五要素)" }, back: { en: "Players, Added values, Rules, Tactics, Scope.", zh: "參與者、附加價值、規則、戰術、範疇。" } },
+                    { front: { en: "Mutual Forbearance", zh: "相互容忍" }, back: { en: "Firms with multi-market contact reduce aggression.", zh: "擁有多市場接觸的廠商會降低攻擊性。" } }
+                ],
+                quiz: [
+                    { q: { en: "Co-opetition implies business is strictly War.", zh: "競合意味著商業純粹是戰爭。" }, a: false },
+                    { q: { en: "Complementors are part of Porter's original Five Forces.", zh: "互補者是波特原始五力的一部分。" }, a: false },
+                    { q: { en: "Lack of awareness can delay a competitive response.", zh: "缺乏察覺 (Awareness) 會延遲競爭回應。" }, a: true }
+                ]
             },
             {
-                type: "text",
-                en: "Competitive Dynamics uses the AMC Framework (Awareness, Motivation, Capability) to predict rivalry. A firm will not respond to an attack if it is unaware, lacks motivation, or lacks capability. Multi-market contact can lead to 'Mutual Forbearance'.",
-                zh: "競爭動態使用 AMC 架構（察覺、動機、能力）來預測敵對行為。如果廠商沒有察覺、缺乏動機或沒有能力，它就不會對攻擊做出回應。多市場接觸 (Multi-market contact) 可能導致「相互容忍」(Mutual Forbearance)。"
+                id: 'topic5',
+                icon: Layers,
+                title: { en: "Resource-Based View (RBV)", zh: "資源基礎觀點" },
+                insight: { en: "Internal resources are the secure foundation for strategy in a changing world.", zh: "在變動的世界中，內部資源是策略的穩固基石。" },
+                summary: {
+                    points: [
+                        { en: "Resources vs. Capabilities.", zh: "資源 (Resources) vs. 能力 (Capabilities)。" },
+                        { en: "VRIO Framework: Valuable, Rare, Inimitable, Organized.", zh: "VRIO 架構：有價值、稀有、難以模仿、組織化。" },
+                        { en: "Core Competencies are the roots of competitiveness.", zh: "核心能耐 (Core Competencies) 是競爭力的根源。" }
+                    ],
+                    objectives: [
+                        { en: "Distinguish tangible from intangible resources.", zh: "區分有形資源與無形資源。" },
+                        { en: "Evaluate sustainability of competitive advantage.", zh: "評估競爭優勢的永續性。" }
+                    ],
+                    prep: { en: "Review: Inside-out vs. Outside-in Strategy", zh: "複習：由內而外 vs. 由外而內的策略" }
+                },
+                content: [
+                    {
+                        type: "text",
+                        en: "The Resource-Based View (RBV) shifts strategy from 'Outside-in' (Industry focus) to 'Inside-out' (Resource focus). Firms are unique bundles of resources. To sustain advantage, resources must be VRIO: Valuable, Rare, Costly to Imitate, and Organized.",
+                        zh: "資源基礎觀點 (RBV) 將策略從「由外而內」(產業焦點) 轉為「由內而外」(資源焦點)。企業是資源的獨特組合。為維持優勢，資源須符合 VRIO：有價值 (Valuable)、稀有 (Rare)、難以模仿 (Inimitable)、組織化 (Organized)。"
+                    },
+                    {
+                        type: "text",
+                        en: "Knowledge-Based View (KBV) sees knowledge as the most strategic resource. Tacit knowledge (hard to articulate) is harder to imitate than Explicit knowledge. Core Competencies are deep proficiencies that allow access to multiple markets (e.g., Honda's engines).",
+                        zh: "知識基礎觀點 (KBV) 視知識為最具策略性的資源。內隱知識 (Tacit knowledge，難以言傳) 比外顯知識 (Explicit knowledge) 更難模仿。核心能耐 (Core Competencies) 是能通往多種市場的深層能力 (如 Honda 的引擎技術)。"
+                    },
+                    {
+                        type: "glossary",
+                        title: { en: "Causal Ambiguity", zh: "因果模糊性" },
+                        desc: { en: "When competitors cannot understand the link between resources and advantage.", zh: "競爭者無法釐清資源與優勢之間的因果關係，導致難以模仿。" }
+                    },
+                    {
+                        type: "glossary",
+                        title: { en: "Social Complexity", zh: "社會複雜性" },
+                        desc: { en: "Interpersonal relationships and culture that are hard to replicate.", zh: "難以複製的人際關係與組織文化網絡。" }
+                    }
+                ],
+                media: [],
+                cards: [
+                    { front: { en: "Tangible Resources", zh: "有形資源" }, back: { en: "Physical assets, cash, equipment.", zh: "實體資產、現金、設備。" } },
+                    { front: { en: "Intangible Resources", zh: "無形資源" }, back: { en: "Brand, IP, culture, reputation.", zh: "品牌、智財權、文化、聲譽。" } },
+                    { front: { en: "VRIO", zh: "VRIO" }, back: { en: "Valuable, Rare, Inimitable, Organized.", zh: "有價值、稀有、難以模仿、組織化。" } },
+                    { front: { en: "Tacit Knowledge", zh: "內隱知識" }, back: { en: "Knowledge that is difficult to transfer or write down.", zh: "難以轉移或寫下的知識 (做中學)。" } },
+                    { front: { en: "Core Competency", zh: "核心能耐" }, back: { en: "Unique strengths allowing access to multiple markets.", zh: "允許進入多種市場的獨特強項。" } }
+                ],
+                quiz: [
+                    { q: { en: "Tangible resources are generally harder to imitate than intangible ones.", zh: "有形資源通常比無形資源更難以模仿。" }, a: false },
+                    { q: { en: "Causal ambiguity protects competitive advantage.", zh: "因果模糊性保護了競爭優勢。" }, a: true },
+                    { q: { en: "Core competencies are usually end-products.", zh: "核心能耐通常是最終產品。" }, a: false }
+                ]
             },
             {
-                type: "glossary",
-                title: { en: "Complementor", zh: "互補者" },
-                desc: { en: "A player whose product enhances the value of your product (Cross-elasticity < 0).", zh: "其產品能提升你產品價值的參與者（交叉彈性為負）。" }
-            },
-            {
-                type: "glossary",
-                title: { en: "Zero-sum vs. Positive-sum", zh: "零和 vs. 正和" },
-                desc: { en: "Zero-sum: One's gain is another's loss. Positive-sum: Total value grows (win-win).", zh: "零和：一方得即一方失。正和：總價值增加（雙贏）。" }
-            }
-        ],
-        media: [],
-        cards: [
-            { front: { en: "Value Net", zh: "價值網" }, back: { en: "Customers, Suppliers, Competitors, Complementors.", zh: "顧客、供應商、競爭者、互補者。" } },
-            { front: { en: "AMC Framework", zh: "AMC 架構" }, back: { en: "Awareness, Motivation, Capability.", zh: "察覺、動機、能力 - 競爭行動的三大驅動力。" } },
-            { front: { en: "PARTS (Game Theory)", zh: "PARTS (賽局五要素)" }, back: { en: "Players, Added values, Rules, Tactics, Scope.", zh: "參與者、附加價值、規則、戰術、範疇。" } },
-            { front: { en: "Mutual Forbearance", zh: "相互容忍" }, back: { en: "Firms with multi-market contact reduce aggression.", zh: "擁有多市場接觸的廠商會降低攻擊性。" } }
-        ],
-        quiz: [
-            { q: { en: "Co-opetition implies business is strictly War.", zh: "競合意味著商業純粹是戰爭。" }, a: false },
-            { q: { en: "Complementors are part of Porter's original Five Forces.", zh: "互補者是波特原始五力的一部分。" }, a: false },
-            { q: { en: "Lack of awareness can delay a competitive response.", zh: "缺乏察覺 (Awareness) 會延遲競爭回應。" }, a: true }
-        ]
-    },
-    {
-        id: 'topic5',
-        icon: Layers,
-        title: { en: "Resource-Based View (RBV)", zh: "資源基礎觀點" },
-        insight: { en: "Internal resources are the secure foundation for strategy in a changing world.", zh: "在變動的世界中，內部資源是策略的穩固基石。" },
-        summary: {
-            points: [
-                { en: "Resources vs. Capabilities.", zh: "資源 (Resources) vs. 能力 (Capabilities)。" },
-                { en: "VRIO Framework: Valuable, Rare, Inimitable, Organized.", zh: "VRIO 架構：有價值、稀有、難以模仿、組織化。" },
-                { en: "Core Competencies are the roots of competitiveness.", zh: "核心能耐 (Core Competencies) 是競爭力的根源。" }
-            ],
-            objectives: [
-                { en: "Distinguish tangible from intangible resources.", zh: "區分有形資源與無形資源。" },
-                { en: "Evaluate sustainability of competitive advantage.", zh: "評估競爭優勢的永續性。" }
-            ],
-            prep: { en: "Review: Inside-out vs. Outside-in Strategy", zh: "複習：由內而外 vs. 由外而內的策略" }
-        },
-        content: [
-            {
-                type: "text",
-                en: "The Resource-Based View (RBV) shifts strategy from 'Outside-in' (Industry focus) to 'Inside-out' (Resource focus). Firms are unique bundles of resources. To sustain advantage, resources must be VRIO: Valuable, Rare, Costly to Imitate, and Organized.",
-                zh: "資源基礎觀點 (RBV) 將策略從「由外而內」(產業焦點) 轉為「由內而外」(資源焦點)。企業是資源的獨特組合。為維持優勢，資源須符合 VRIO：有價值 (Valuable)、稀有 (Rare)、難以模仿 (Inimitable)、組織化 (Organized)。"
-            },
-            {
-                type: "text",
-                en: "Knowledge-Based View (KBV) sees knowledge as the most strategic resource. Tacit knowledge (hard to articulate) is harder to imitate than Explicit knowledge. Core Competencies are deep proficiencies that allow access to multiple markets (e.g., Honda's engines).",
-                zh: "知識基礎觀點 (KBV) 視知識為最具策略性的資源。內隱知識 (Tacit knowledge，難以言傳) 比外顯知識 (Explicit knowledge) 更難模仿。核心能耐 (Core Competencies) 是能通往多種市場的深層能力 (如 Honda 的引擎技術)。"
-            },
-            {
-                type: "glossary",
-                title: { en: "Causal Ambiguity", zh: "因果模糊性" },
-                desc: { en: "When competitors cannot understand the link between resources and advantage.", zh: "競爭者無法釐清資源與優勢之間的因果關係，導致難以模仿。" }
-            },
-            {
-                type: "glossary",
-                title: { en: "Social Complexity", zh: "社會複雜性" },
-                desc: { en: "Interpersonal relationships and culture that are hard to replicate.", zh: "難以複製的人際關係與組織文化網絡。" }
-            }
-        ],
-        media: [],
-        cards: [
-            { front: { en: "Tangible Resources", zh: "有形資源" }, back: { en: "Physical assets, cash, equipment.", zh: "實體資產、現金、設備。" } },
-            { front: { en: "Intangible Resources", zh: "無形資源" }, back: { en: "Brand, IP, culture, reputation.", zh: "品牌、智財權、文化、聲譽。" } },
-            { front: { en: "VRIO", zh: "VRIO" }, back: { en: "Valuable, Rare, Inimitable, Organized.", zh: "有價值、稀有、難以模仿、組織化。" } },
-            { front: { en: "Tacit Knowledge", zh: "內隱知識" }, back: { en: "Knowledge that is difficult to transfer or write down.", zh: "難以轉移或寫下的知識 (做中學)。" } },
-            { front: { en: "Core Competency", zh: "核心能耐" }, back: { en: "Unique strengths allowing access to multiple markets.", zh: "允許進入多種市場的獨特強項。" } }
-        ],
-        quiz: [
-            { q: { en: "Tangible resources are generally harder to imitate than intangible ones.", zh: "有形資源通常比無形資源更難以模仿。" }, a: false },
-            { q: { en: "Causal ambiguity protects competitive advantage.", zh: "因果模糊性保護了競爭優勢。" }, a: true },
-            { q: { en: "Core competencies are usually end-products.", zh: "核心能耐通常是最終產品。" }, a: false }
-        ]
-    },
-    {
-        id: 'topic6',
-        icon: BrainCircuit,
-        title: { en: "Dynamic Capabilities & Learning", zh: "動態能力與組織學習" },
-        insight: { en: "Dynamic capabilities reconfigure resources to match the environment.", zh: "動態能力重組資源以適應環境。" },
-        summary: {
-            points: [
-                { en: "Dynamic Capabilities: Sense, Seize, Transform.", zh: "動態能力：感知 (Sense)、捕捉 (Seize)、轉型 (Transform)。" },
-                { en: "Organizational Learning: Exploration vs. Exploitation.", zh: "組織學習：探索 (Exploration) vs. 開發 (Exploitation)。" },
-                { en: "Ambidextrous Organization balances both.", zh: "雙元組織 (Ambidextrous Organization) 兼顧兩者。" }
-            ],
-            objectives: [
-                { en: "Define the three micro-foundations of dynamic capabilities.", zh: "定義動態能力的微觀基礎。" },
-                { en: "Understand the 'Success Trap' in learning.", zh: "理解學習中的「成功陷阱」。" }
-            ],
-            prep: { en: "Case: IBM's Transformation", zh: "個案：IBM 的轉型" }
-        },
-        content: [
-            {
-                type: "text",
-                en: "Ordinary capabilities are for efficiency (doing things right), while Dynamic Capabilities are for change (doing the right things). They enable a firm to Sense opportunities, Seize them, and Transform the resource base. This is vital in high-velocity markets.",
-                zh: "普通能力是為了效率 (把事做對)，而動態能力是為了變革 (做對的事)。它們使企業能感知 (Sense) 機會、捕捉 (Seize) 機會，並轉型 (Transform) 資源基礎。這在高速市場中至關重要。"
-            },
-            {
-                type: "text",
-                en: "Organizational Learning uses the SECI model (Socialization, Externalization, Combination, Internalization) to create knowledge. Firms must balance Exploration (innovation, risk) and Exploitation (refinement, efficiency). 'Ambidexterity' is the ability to do both.",
-                zh: "組織學習利用 SECI 模型 (社會化、外化、結合、內化) 創造知識。企業必須在探索 (創新、風險) 與開發 (優化、效率) 間取得平衡。「雙元性」(Ambidexterity) 即兼顧兩者的能力。"
-            },
-            {
-                type: "glossary",
-                title: { en: "Ambidexterity", zh: "雙元性" },
-                desc: { en: "Simultaneously exploiting existing competencies and exploring new opportunities.", zh: "同時開發既有能耐與探索新機會。" }
-            },
-            {
-                type: "glossary",
-                title: { en: "SECI Model", zh: "SECI 模型" },
-                desc: { en: "Socialization, Externalization, Combination, Internalization (Nonaka).", zh: "知識創造螺旋：社會化、外化、結合、內化 (Nonaka)。" }
-            }
-        ],
-        media: [],
-        cards: [
-            { front: { en: "Exploration", zh: "探索" }, back: { en: "Search, discovery, risk, innovation. (March 1991)", zh: "搜尋、發現、風險、創新。(March 1991)" } },
-            { front: { en: "Exploitation", zh: "開發/運用" }, back: { en: "Refinement, efficiency, execution, selection.", zh: "優化、效率、執行、選擇。" } },
-            { front: { en: "Sense, Seize, Transform", zh: "感知、捕捉、轉型" }, back: { en: "The three pillars of Dynamic Capabilities (Teece).", zh: "動態能力的三大支柱 (Teece)。" } },
-            { front: { en: "Success Trap", zh: "成功陷阱" }, back: { en: "Over-emphasis on exploitation at the expense of exploration.", zh: "過度強調開發而犧牲了探索 (導致過時)。" } }
-        ],
-        quiz: [
-            { q: { en: "Dynamic capabilities are static routines.", zh: "動態能力是靜態的慣例。" }, a: false },
-            { q: { en: "Exploitation refers to refining existing knowledge.", zh: "開發 (Exploitation) 指的是優化現有知識。" }, a: true },
-            { q: { en: "Ambidextrous organizations avoid new risks.", zh: "雙元組織避免新的風險。" }, a: false }
-        ]
+                id: 'topic6',
+                icon: BrainCircuit,
+                title: { en: "Dynamic Capabilities & Learning", zh: "動態能力與組織學習" },
+                insight: { en: "Dynamic capabilities reconfigure resources to match the environment.", zh: "動態能力重組資源以適應環境。" },
+                summary: {
+                    points: [
+                        { en: "Dynamic Capabilities: Sense, Seize, Transform.", zh: "動態能力：感知 (Sense)、捕捉 (Seize)、轉型 (Transform)。" },
+                        { en: "Organizational Learning: Exploration vs. Exploitation.", zh: "組織學習：探索 (Exploration) vs. 開發 (Exploitation)。" },
+                        { en: "Ambidextrous Organization balances both.", zh: "雙元組織 (Ambidextrous Organization) 兼顧兩者。" }
+                    ],
+                    objectives: [
+                        { en: "Define the three micro-foundations of dynamic capabilities.", zh: "定義動態能力的微觀基礎。" },
+                        { en: "Understand the 'Success Trap' in learning.", zh: "理解學習中的「成功陷阱」。" }
+                    ],
+                    prep: { en: "Case: IBM's Transformation", zh: "個案：IBM 的轉型" }
+                },
+                content: [
+                    {
+                        type: "text",
+                        en: "Ordinary capabilities are for efficiency (doing things right), while Dynamic Capabilities are for change (doing the right things). They enable a firm to Sense opportunities, Seize them, and Transform the resource base. This is vital in high-velocity markets.",
+                        zh: "普通能力是為了效率 (把事做對)，而動態能力是為了變革 (做對的事)。它們使企業能感知 (Sense) 機會、捕捉 (Seize) 機會，並轉型 (Transform) 資源基礎。這在高速市場中至關重要。"
+                    },
+                    {
+                        type: "text",
+                        en: "Organizational Learning uses the SECI model (Socialization, Externalization, Combination, Internalization) to create knowledge. Firms must balance Exploration (innovation, risk) and Exploitation (refinement, efficiency). 'Ambidexterity' is the ability to do both.",
+                        zh: "組織學習利用 SECI 模型 (社會化、外化、結合、內化) 創造知識。企業必須在探索 (創新、風險) 與開發 (優化、效率) 間取得平衡。「雙元性」(Ambidexterity) 即兼顧兩者的能力。"
+                    },
+                    {
+                        type: "glossary",
+                        title: { en: "Ambidexterity", zh: "雙元性" },
+                        desc: { en: "Simultaneously exploiting existing competencies and exploring new opportunities.", zh: "同時開發既有能耐與探索新機會。" }
+                    },
+                    {
+                        type: "glossary",
+                        title: { en: "SECI Model", zh: "SECI 模型" },
+                        desc: { en: "Socialization, Externalization, Combination, Internalization (Nonaka).", zh: "知識創造螺旋：社會化、外化、結合、內化 (Nonaka)。" }
+                    }
+                ],
+                media: [],
+                cards: [
+                    { front: { en: "Exploration", zh: "探索" }, back: { en: "Search, discovery, risk, innovation. (March 1991)", zh: "搜尋、發現、風險、創新。(March 1991)" } },
+                    { front: { en: "Exploitation", zh: "開發/運用" }, back: { en: "Refinement, efficiency, execution, selection.", zh: "優化、效率、執行、選擇。" } },
+                    { front: { en: "Sense, Seize, Transform", zh: "感知、捕捉、轉型" }, back: { en: "The three pillars of Dynamic Capabilities (Teece).", zh: "動態能力的三大支柱 (Teece)。" } },
+                    { front: { en: "Success Trap", zh: "成功陷阱" }, back: { en: "Over-emphasis on exploitation at the expense of exploration.", zh: "過度強調開發而犧牲了探索 (導致過時)。" } }
+                ],
+                quiz: [
+                    { q: { en: "Dynamic capabilities are static routines.", zh: "動態能力是靜態的慣例。" }, a: false },
+                    { q: { en: "Exploitation refers to refining existing knowledge.", zh: "開發 (Exploitation) 指的是優化現有知識。" }, a: true },
+                    { q: { en: "Ambidextrous organizations avoid new risks.", zh: "雙元組織避免新的風險。" }, a: false }
+                ]
             },
             {
                 id: 'topic7',
@@ -355,41 +491,41 @@ const COURSE_DATA = [
                         { en: "Understand the risks of being 'stuck in the middle'.", zh: "理解「卡在中間」(Stuck in the middle) 的風險。" }
                     ],
                     prep: { en: "Read Grant Ch.7; Case: Apple vs. Android", zh: "閱讀 Grant 第七章；個案：Apple vs. Android" }
-        },
-        content: [
-            {
-                type: "text",
-                en: "Porter's Generic Strategies define how to compete. Cost Leadership pursues the lowest cost structure (via Scale, Learning Curve). Differentiation creates unique value to command a premium price. Focus targets a narrow segment.",
-                zh: "波特一般策略定義了如何競爭。成本領導 (Cost Leadership) 追求最低成本結構 (透過規模、學習曲線)。差異化 (Differentiation) 創造獨特價值以獲取溢價。集中策略 (Focus) 則鎖定狹窄市場。"
-            },
-            {
-                type: "text",
-                en: "Cost Drivers: Economies of Scale, Learning Curve, Process Technology. Differentiation Drivers: Brand, Product Features, Service. 'Stuck in the Middle' leads to low profitability (neither low cost nor unique).",
-                zh: "成本驅動因素：規模經濟、學習曲線、製程技術。差異化驅動因素：品牌、產品特色、服務。「卡在中間」(Stuck in the Middle) 導致低獲利 (既非低成本也無獨特性)。"
-            },
-            {
-                type: "glossary",
-                title: { en: "Economies of Scale", zh: "規模經濟" },
-                desc: { en: "Unit cost reductions associated with large scale output.", zh: "與大規模產出相關的單位成本降低。" }
-            },
-            {
-                type: "glossary",
-                title: { en: "Learning Curve", zh: "學習曲線" },
-                desc: { en: "Unit costs decrease as cumulative output doubles.", zh: "隨著累積產量倍增，單位成本下降。" }
-            }
-        ],
-        media: [],
-        cards: [
-            { front: { en: "Differentiation", zh: "差異化" }, back: { en: "Unique attributes that customers value and pay for.", zh: "顧客重視並願意付費的獨特屬性。" } },
-            { front: { en: "Cost Leadership", zh: "成本領導" }, back: { en: "Becoming the lowest-cost producer in the industry.", zh: "成為產業中的最低成本生產者。" } },
-            { front: { en: "Stuck in the Middle", zh: "卡在中間" }, back: { en: "Lacking a clear strategy; low profit.", zh: "缺乏明確策略；低獲利。" } },
-            { front: { en: "Focus Strategy", zh: "集中策略" }, back: { en: "Serving a specific target segment better than broad competitors.", zh: "比廣泛競爭者更好地服務特定目標客群。" } }
-        ],
-        quiz: [
-            { q: { en: "Differentiation strategy aims to reduce cost below competitors.", zh: "差異化策略旨在將成本降低至競爭者之下。" }, a: false },
-            { q: { en: "Focus strategy targets the whole industry.", zh: "集中策略鎖定整個產業。" }, a: false },
-            { q: { en: "Economies of Scale help in Cost Leadership.", zh: "規模經濟有助於成本領導。" }, a: true }
-        ]
+                },
+                content: [
+                    {
+                        type: "text",
+                        en: "Porter's Generic Strategies define how to compete. Cost Leadership pursues the lowest cost structure (via Scale, Learning Curve). Differentiation creates unique value to command a premium price. Focus targets a narrow segment.",
+                        zh: "波特一般策略定義了如何競爭。成本領導 (Cost Leadership) 追求最低成本結構 (透過規模、學習曲線)。差異化 (Differentiation) 創造獨特價值以獲取溢價。集中策略 (Focus) 則鎖定狹窄市場。"
+                    },
+                    {
+                        type: "text",
+                        en: "Cost Drivers: Economies of Scale, Learning Curve, Process Technology. Differentiation Drivers: Brand, Product Features, Service. 'Stuck in the Middle' leads to low profitability (neither low cost nor unique).",
+                        zh: "成本驅動因素：規模經濟、學習曲線、製程技術。差異化驅動因素：品牌、產品特色、服務。「卡在中間」(Stuck in the Middle) 導致低獲利 (既非低成本也無獨特性)。"
+                    },
+                    {
+                        type: "glossary",
+                        title: { en: "Economies of Scale", zh: "規模經濟" },
+                        desc: { en: "Unit cost reductions associated with large scale output.", zh: "與大規模產出相關的單位成本降低。" }
+                    },
+                    {
+                        type: "glossary",
+                        title: { en: "Learning Curve", zh: "學習曲線" },
+                        desc: { en: "Unit costs decrease as cumulative output doubles.", zh: "隨著累積產量倍增，單位成本下降。" }
+                    }
+                ],
+                media: [],
+                cards: [
+                    { front: { en: "Differentiation", zh: "差異化" }, back: { en: "Unique attributes that customers value and pay for.", zh: "顧客重視並願意付費的獨特屬性。" } },
+                    { front: { en: "Cost Leadership", zh: "成本領導" }, back: { en: "Becoming the lowest-cost producer in the industry.", zh: "成為產業中的最低成本生產者。" } },
+                    { front: { en: "Stuck in the Middle", zh: "卡在中間" }, back: { en: "Lacking a clear strategy; low profit.", zh: "缺乏明確策略；低獲利。" } },
+                    { front: { en: "Focus Strategy", zh: "集中策略" }, back: { en: "Serving a specific target segment better than broad competitors.", zh: "比廣泛競爭者更好地服務特定目標客群。" } }
+                ],
+                quiz: [
+                    { q: { en: "Differentiation strategy aims to reduce cost below competitors.", zh: "差異化策略旨在將成本降低至競爭者之下。" }, a: false },
+                    { q: { en: "Focus strategy targets the whole industry.", zh: "集中策略鎖定整個產業。" }, a: false },
+                    { q: { en: "Economies of Scale help in Cost Leadership.", zh: "規模經濟有助於成本領導。" }, a: true }
+                ]
             },
             {
                 id: 'topic8',
@@ -407,46 +543,46 @@ const COURSE_DATA = [
                         { en: "Explain how dominant designs emerge.", zh: "解釋主流設計 (Dominant Design) 如何浮現。" }
                     ],
                     prep: { en: "Case: Google Self-Driving Car", zh: "個案：Google 自駕車" }
-        },
-        content: [
-            {
-                type: "text",
-                en: "Innovation is the commercialization of Invention. The Innovation Funnel shows many ideas lead to few successes. The S-Curve describes tech performance improvement: slow start, rapid growth, then plateau.",
-                zh: "創新是發明的商業化。創新漏斗 (Innovation Funnel) 顯示許多點子僅產生少數成功。S 曲線描述技術效能的改善：起步慢、快速成長、然後趨緩。"
-            },
-            {
-                type: "text",
-                en: "Network Effects (Metcalfe's Law) create 'Winner-Take-All' markets where value grows with users. This leads to Standards Wars (e.g., VHS vs Betamax). A Dominant Design emerges after an 'Era of Ferment'. Open Innovation uses external ideas.",
-                zh: "網絡效應 (Metcalfe's Law) 創造「贏家全拿」市場，價值隨用戶增加。這導致標準戰爭 (如 VHS vs Betamax)。在「發酵期」(Era of Ferment) 後會浮現主流設計 (Dominant Design)。開放式創新 (Open Innovation) 利用外部點子。"
-            },
-            {
-                type: "glossary",
-                title: { en: "Dominant Design", zh: "主流設計" },
-                desc: { en: "A product architecture that becomes the industry standard.", zh: "成為產業標準的產品架構。" }
-            },
-            {
-                type: "glossary",
-                title: { en: "Crossing the Chasm", zh: "跨越鴻溝" },
-                desc: { en: "The gap between early adopters and the early majority.", zh: "早期採用者與早期大眾之間的斷層。" }
-            }
-        ],
-        media: [],
-        cards: [
-            { front: { en: "Network Effect", zh: "網絡效應" }, back: { en: "Value increases as more users join (Demand-side economies).", zh: "隨著更多使用者加入，價值增加 (需求面規模經濟)。" } },
-            { front: { en: "Invention vs. Innovation", zh: "發明 vs. 創新" }, back: { en: "Invention = New Idea; Innovation = Commercialization.", zh: "發明 = 新點子；創新 = 商業化。" } },
-            { front: { en: "S-Curve", zh: "S 曲線" }, back: { en: "Lifecycle of technology performance.", zh: "技術效能的生命週期。" } },
-            { front: { en: "Open Innovation", zh: "開放式創新" }, back: { en: "Leveraging both internal and external ideas/paths to market.", zh: "同時利用內部與外部的點子/路徑進入市場。" } }
-        ],
-        quiz: [
-            { q: { en: "Invention is the same as Innovation.", zh: "發明等同於創新。" }, a: false },
-            { q: { en: "Network effects can lead to winner-take-all markets.", zh: "網絡效應可能導致贏家全拿的市場。" }, a: true },
-            { q: { en: "S-Curve describes the relationship between effort and performance.", zh: "S 曲線描述了投入與效能之間的關係。" }, a: true }
-        ]
+                },
+                content: [
+                    {
+                        type: "text",
+                        en: "Innovation is the commercialization of Invention. The Innovation Funnel shows many ideas lead to few successes. The S-Curve describes tech performance improvement: slow start, rapid growth, then plateau.",
+                        zh: "創新是發明的商業化。創新漏斗 (Innovation Funnel) 顯示許多點子僅產生少數成功。S 曲線描述技術效能的改善：起步慢、快速成長、然後趨緩。"
+                    },
+                    {
+                        type: "text",
+                        en: "Network Effects (Metcalfe's Law) create 'Winner-Take-All' markets where value grows with users. This leads to Standards Wars (e.g., VHS vs Betamax). A Dominant Design emerges after an 'Era of Ferment'. Open Innovation uses external ideas.",
+                        zh: "網絡效應 (Metcalfe's Law) 創造「贏家全拿」市場，價值隨用戶增加。這導致標準戰爭 (如 VHS vs Betamax)。在「發酵期」(Era of Ferment) 後會浮現主流設計 (Dominant Design)。開放式創新 (Open Innovation) 利用外部點子。"
+                    },
+                    {
+                        type: "glossary",
+                        title: { en: "Dominant Design", zh: "主流設計" },
+                        desc: { en: "A product architecture that becomes the industry standard.", zh: "成為產業標準的產品架構。" }
+                    },
+                    {
+                        type: "glossary",
+                        title: { en: "Crossing the Chasm", zh: "跨越鴻溝" },
+                        desc: { en: "The gap between early adopters and the early majority.", zh: "早期採用者與早期大眾之間的斷層。" }
+                    }
+                ],
+                media: [],
+                cards: [
+                    { front: { en: "Network Effect", zh: "網絡效應" }, back: { en: "Value increases as more users join (Demand-side economies).", zh: "隨著更多使用者加入，價值增加 (需求面規模經濟)。" } },
+                    { front: { en: "Invention vs. Innovation", zh: "發明 vs. 創新" }, back: { en: "Invention = New Idea; Innovation = Commercialization.", zh: "發明 = 新點子；創新 = 商業化。" } },
+                    { front: { en: "S-Curve", zh: "S 曲線" }, back: { en: "Lifecycle of technology performance.", zh: "技術效能的生命週期。" } },
+                    { front: { en: "Open Innovation", zh: "開放式創新" }, back: { en: "Leveraging both internal and external ideas/paths to market.", zh: "同時利用內部與外部的點子/路徑進入市場。" } }
+                ],
+                quiz: [
+                    { q: { en: "Invention is the same as Innovation.", zh: "發明等同於創新。" }, a: false },
+                    { q: { en: "Network effects can lead to winner-take-all markets.", zh: "網絡效應可能導致贏家全拿的市場。" }, a: true },
+                    { q: { en: "S-Curve describes the relationship between effort and performance.", zh: "S 曲線描述了投入與效能之間的關係。" }, a: true }
+                ]
             }
         ];
 
-        // --- 2. Functional Modules ---
-        
+        // --- Components ---
+
         const Header = ({ darkMode, toggleTheme, lang, toggleLang, toggleSidebar, toggleDashboard, dashboardOpen, scrollToTop }) => {
             return (
                 <header className={`sticky top-0 z-50 backdrop-blur-md border-b flex items-center justify-between px-4 py-3 h-[60px] transition-colors duration-300 ${darkMode ? 'bg-[#0f172a]/95 border-slate-700/50' : 'bg-white/95 border-slate-200'}`}>
@@ -493,7 +629,7 @@ const COURSE_DATA = [
 
         const Sidebar = ({ isOpen, close, currentTopic, setTopic, topics, lang, darkMode }) => {
             return (
-                <>
+                <React.Fragment>
                     {isOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={close} />}
                     <aside className={`fixed top-[60px] left-0 bottom-0 w-72 border-r z-40 transform transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'} ${darkMode ? 'bg-[#0f172a] border-slate-700/50' : 'bg-white border-slate-200'}`}>
                         <div className="p-4 overflow-y-auto h-full scrollbar-hide">
@@ -524,7 +660,7 @@ const COURSE_DATA = [
                             </div>
                         </div>
                     </aside>
-                </>
+                </React.Fragment>
             );
         };
 
@@ -598,10 +734,6 @@ const COURSE_DATA = [
                                     <button onClick={downloadCSV} className={`w-full py-2 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors ${darkMode ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-slate-200 hover:bg-slate-300 text-slate-800'}`}>
                                         <ExternalLink size={16} />
                                         {lang === 'en' ? "Export CSV" : "匯出學習紀錄"}
-                                    </button>
-                                    <button onClick={downloadHTML} className={`w-full py-2 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors border ${darkMode ? 'border-[#10b981]/50 text-[#10b981] hover:bg-[#10b981]/10' : 'border-[#10b981] text-[#10b981] hover:bg-[#10b981]/10'}`}>
-                                        <Download size={16} />
-                                        {lang === 'en' ? "Download HTML" : "下載部署檔"}
                                     </button>
                                 </div>
                             </div>
@@ -682,588 +814,569 @@ const COURSE_DATA = [
                         responseText = lang === 'en' 
                             ? "I'm focusing on the SMMC course materials (Strategy, VPC, RBV, etc.). Could you rephrase your question using specific course terminology?" 
                             : "我專注於 SMMC 課程教材（策略、VPC、RBV 等）。能否請你使用具體的課程術語重新提問？";
-            }
+                    }
 
-            setMessages(prev => [...prev, { role: 'ai', text: responseText }]);
-        }, 800);
-    };
+                    setMessages(prev => [...prev, { role: 'ai', text: responseText }]);
+                }, 800);
+            };
 
-    if (!isOpen) {
-        return (
-            <button 
-                onClick={() => setIsOpen(true)}
-                className="fixed bottom-6 right-6 z-50 bg-[#10b981] hover:bg-[#059669] text-white p-4 rounded-full shadow-lg transition-transform hover:scale-110 flex items-center justify-center"
-            >
-                <MessageSquare size={24} />
-            </button>
-        );
-    }
-
-    const panelBg = darkMode ? 'bg-[#0f172a] border-slate-700' : 'bg-white border-slate-200';
-    const msgUserBg = 'bg-[#10b981] text-white';
-    const msgAiBg = darkMode ? 'bg-slate-700 text-slate-200' : 'bg-slate-100 text-slate-800';
-    const inputBg = darkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-slate-200';
-
-    return (
-        <div className="fixed bottom-6 right-6 z-50 animate-fade-in-up">
-            <div className={`${panelBg} border shadow-2xl rounded-2xl w-80 sm:w-96 overflow-hidden flex flex-col h-[500px]`}>
-                <div className="bg-[#10b981] p-3 text-white font-bold flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <BrainCircuit size={18} />
-                        AI TA
-                    </div>
-                    <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-1 rounded">
-                        <Minimize2 size={18} />
+            if (!isOpen) {
+                return (
+                    <button 
+                        onClick={() => setIsOpen(true)}
+                        className="fixed bottom-6 right-6 z-50 bg-[#10b981] hover:bg-[#059669] text-white p-4 rounded-full shadow-lg transition-transform hover:scale-110 flex items-center justify-center"
+                    >
+                        <MessageSquare size={24} />
                     </button>
-                </div>
-                <div className={`flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide ${darkMode ? 'bg-slate-900/95' : 'bg-slate-50/95'}`}>
-                    {messages.map((m, i) => (
-                        <div key={i} className={`p-3 rounded-lg text-sm max-w-[85%] leading-relaxed ${m.role === 'user' ? msgUserBg + ' ml-auto' : msgAiBg}`}>
-                            {m.text}
+                );
+            }
+
+            const panelBg = darkMode ? 'bg-[#0f172a] border-slate-700' : 'bg-white border-slate-200';
+            const msgUserBg = 'bg-[#10b981] text-white';
+            const msgAiBg = darkMode ? 'bg-slate-700 text-slate-200' : 'bg-slate-100 text-slate-800';
+            const inputBg = darkMode ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-50 text-slate-900 border-slate-200';
+
+            return (
+                <div className="fixed bottom-6 right-6 z-50 animate-fade-in-up">
+                    <div className={`${panelBg} border shadow-2xl rounded-2xl w-80 sm:w-96 overflow-hidden flex flex-col h-[500px]`}>
+                        <div className="bg-[#10b981] p-3 text-white font-bold flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <BrainCircuit size={18} />
+                                AI TA
+                            </div>
+                            <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-1 rounded">
+                                <Minimize2 size={18} />
+                            </button>
                         </div>
-                    ))}
+                        <div className={`flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide ${darkMode ? 'bg-slate-900/95' : 'bg-slate-50/95'}`}>
+                            {messages.map((m, i) => (
+                                <div key={i} className={`p-3 rounded-lg text-sm max-w-[85%] leading-relaxed ${m.role === 'user' ? msgUserBg + ' ml-auto' : msgAiBg}`}>
+                                    {m.text}
+                                </div>
+                            ))}
+                        </div>
+                        <form onSubmit={handleAsk} className={`p-3 border-t flex gap-2 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                            <input 
+                                type="text" 
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                placeholder={lang === 'en' ? "Ask a question..." : "輸入問題..."}
+                                className={`flex-1 text-sm rounded px-3 py-2 outline-none border focus:border-[#10b981] ${inputBg}`}
+                            />
+                            <button type="submit" className="bg-[#10b981] p-2 rounded text-white hover:bg-[#064e3b]"><ArrowRight size={16}/></button>
+                        </form>
+                    </div>
                 </div>
-                <form onSubmit={handleAsk} className={`p-3 border-t flex gap-2 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-                    <input 
-                        type="text" 
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder={lang === 'en' ? "Ask a question..." : "輸入問題..."}
-                        className={`flex-1 text-sm rounded px-3 py-2 outline-none border focus:border-[#10b981] ${inputBg}`}
-                    />
-                    <button type="submit" className="bg-[#10b981] p-2 rounded text-white hover:bg-[#064e3b]"><ArrowRight size={16}/></button>
-                </form>
-            </div>
-        </div>
-    );
-};
+            );
+        };
 
-const TTSPlayer = ({ textEn, textZh, lang, darkMode }) => {
-    const [playing, setPlaying] = useState(false);
-    const [highlightIdx, setHighlightIdx] = useState(-1);
-    
-    const textToRead = lang === 'en' ? textEn : textZh;
-    const sentences = useMemo(() => textToRead.match(/[^.!?。！？]+[.!?。！？]+/g) || [textToRead], [textToRead]);
-
-    const speak = () => {
-        if (playing) {
-            window.speechSynthesis.cancel();
-            setPlaying(false);
-            setHighlightIdx(-1);
-            return;
-        }
-
-        setPlaying(true);
-        let currentIdx = 0;
-
-        const readNext = () => {
-            if (currentIdx >= sentences.length) {
-                setPlaying(false);
-                setHighlightIdx(-1);
-                return;
-            }
-
-            setHighlightIdx(currentIdx);
+        const TTSPlayer = ({ textEn, textZh, lang, darkMode }) => {
+            const [playing, setPlaying] = useState(false);
+            const [highlightIdx, setHighlightIdx] = useState(-1);
             
-            const el = document.getElementById(`sent-${currentIdx}`);
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const textToRead = lang === 'en' ? textEn : textZh;
+            const sentences = useMemo(() => textToRead.match(/[^.!?。！？]+[.!?。！？]+/g) || [textToRead], [textToRead]);
 
-            const utterance = new SpeechSynthesisUtterance(sentences[currentIdx]);
-            
-            const voices = window.speechSynthesis.getVoices();
-            if (lang === 'en') {
-                utterance.lang = 'en-GB';
-                const gbVoice = voices.find(v => v.lang.includes('en-GB') && v.name.includes('Male')) || voices.find(v => v.lang.includes('en-GB'));
-                if (gbVoice) utterance.voice = gbVoice;
-            } else {
-                utterance.lang = 'zh-TW';
-                const twVoice = voices.find(v => v.lang === 'zh-TW' || v.name.includes('Taiwan') || v.name.includes('Yating'));
-                if (twVoice) utterance.voice = twVoice;
-            }
+            const speak = () => {
+                if (playing) {
+                    window.speechSynthesis.cancel();
+                    setPlaying(false);
+                    setHighlightIdx(-1);
+                    return;
+                }
 
-            utterance.rate = 1.0;
-            utterance.onend = () => {
-                currentIdx++;
+                setPlaying(true);
+                let currentIdx = 0;
+
+                const readNext = () => {
+                    if (currentIdx >= sentences.length) {
+                        setPlaying(false);
+                        setHighlightIdx(-1);
+                        return;
+                    }
+
+                    setHighlightIdx(currentIdx);
+                    
+                    const el = document.getElementById(`sent-${currentIdx}`);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    const utterance = new SpeechSynthesisUtterance(sentences[currentIdx]);
+                    
+                    const voices = window.speechSynthesis.getVoices();
+                    if (lang === 'en') {
+                        utterance.lang = 'en-GB';
+                        const gbVoice = voices.find(v => v.lang.includes('en-GB') && v.name.includes('Male')) || voices.find(v => v.lang.includes('en-GB'));
+                        if (gbVoice) utterance.voice = gbVoice;
+                    } else {
+                        utterance.lang = 'zh-TW';
+                        const twVoice = voices.find(v => v.lang === 'zh-TW' || v.name.includes('Taiwan') || v.name.includes('Yating'));
+                        if (twVoice) utterance.voice = twVoice;
+                    }
+
+                    utterance.rate = 1.0;
+                    utterance.onend = () => {
+                        currentIdx++;
+                        readNext();
+                    };
+
+                    window.speechSynthesis.speak(utterance);
+                };
+
                 readNext();
             };
 
-            window.speechSynthesis.speak(utterance);
+            useEffect(() => { window.speechSynthesis.getVoices(); }, []);
+
+            useEffect(() => {
+                return () => {
+                    window.speechSynthesis.cancel();
+                }
+            }, []);
+
+            const textColor = darkMode ? 'text-slate-300' : 'text-slate-600';
+            const highlightClass = darkMode ? 'bg-[#10b981]/30 border-[#10b981] text-white' : 'bg-[#10b981]/10 border-[#10b981] text-slate-900';
+
+            return (
+                <div className={`my-6 p-4 rounded-xl border ${darkMode ? 'border-slate-800 bg-slate-800/20' : 'border-slate-200 bg-slate-50'}`}>
+                    <button onClick={speak} className="flex items-center gap-2 text-sm font-bold text-[#10b981] hover:underline transition-all mb-3">
+                        {playing ? <Pause size={18} /> : <Play size={18} />}
+                        {playing ? (lang === 'en' ? 'Pause Explanation' : '暫停講解') : (lang === 'en' ? 'Listen to Explanation' : '聆聽講解')}
+                    </button>
+                    <p className={`leading-relaxed text-lg tracking-wide ${textColor}`}>
+                        {sentences.map((s, i) => (
+                            <span 
+                                key={i} 
+                                id={`sent-${i}`}
+                                className={`transition-all duration-300 rounded px-1 py-0.5 ${i === highlightIdx ? highlightClass + ' border-l-4 shadow-sm' : ''}`}
+                            >
+                                {s}
+                            </span>
+                        ))}
+                    </p>
+                </div>
+            );
         };
 
-        readNext();
-    };
+        const Quiz = ({ questions, lang, onFinish, darkMode }) => {
+            const [currentQ, setCurrentQ] = useState(0);
+            const [score, setScore] = useState(0);
+            const [showResult, setShowResult] = useState(false);
+            const [feedback, setFeedback] = useState(null); 
 
-    useEffect(() => { window.speechSynthesis.getVoices(); }, []);
+            const handleAnswer = (isCorrect) => {
+                const newScore = isCorrect ? score + 1 : score;
+                setScore(newScore);
+                setFeedback(isCorrect);
+                
+                setTimeout(() => {
+                    setFeedback(null);
+                    if (currentQ < questions.length - 1) {
+                        setCurrentQ(currentQ + 1);
+                    } else {
+                        setShowResult(true);
+                        onFinish(Math.round((newScore / questions.length) * 100));
+                    }
+                }, 1200);
+            };
 
-    useEffect(() => {
-        return () => {
-            window.speechSynthesis.cancel();
-        }
-    }, []);
+            const reset = () => {
+                setCurrentQ(0);
+                setScore(0);
+                setShowResult(false);
+            };
 
-    const textColor = darkMode ? 'text-slate-300' : 'text-slate-600';
-    const highlightClass = darkMode ? 'bg-[#10b981]/30 border-[#10b981] text-white' : 'bg-[#10b981]/10 border-[#10b981] text-slate-900';
+            const cardBg = darkMode ? 'bg-slate-800/70 border-slate-700' : 'bg-white border-slate-200';
+            const textColor = darkMode ? 'text-white' : 'text-slate-900';
+            const subTextColor = darkMode ? 'text-slate-400' : 'text-slate-500';
 
-    return (
-        <div className={`my-6 p-4 rounded-xl border ${darkMode ? 'border-slate-800 bg-slate-800/20' : 'border-slate-200 bg-slate-50'}`}>
-            <button onClick={speak} className="flex items-center gap-2 text-sm font-bold text-[#10b981] hover:underline transition-all mb-3">
-                {playing ? <Pause size={18} /> : <Play size={18} />}
-                {playing ? (lang === 'en' ? 'Pause Explanation' : '暫停講解') : (lang === 'en' ? 'Listen to Explanation' : '聆聽講解')}
-            </button>
-            <p className={`leading-relaxed text-lg tracking-wide ${textColor}`}>
-                {sentences.map((s, i) => (
-                    <span 
-                        key={i} 
-                        id={`sent-${i}`}
-                        className={`transition-all duration-300 rounded px-1 py-0.5 ${i === highlightIdx ? highlightClass + ' border-l-4 shadow-sm' : ''}`}
-                    >
-                        {s}
-                    </span>
-                ))}
-            </p>
-        </div>
-    );
-};
-
-const Quiz = ({ questions, lang, onFinish, darkMode }) => {
-    const [currentQ, setCurrentQ] = useState(0);
-    const [score, setScore] = useState(0);
-    const [showResult, setShowResult] = useState(false);
-    const [feedback, setFeedback] = useState(null); 
-
-    const handleAnswer = (isCorrect) => {
-        const newScore = isCorrect ? score + 1 : score;
-        setScore(newScore);
-        setFeedback(isCorrect);
-        
-        setTimeout(() => {
-            setFeedback(null);
-            if (currentQ < questions.length - 1) {
-                setCurrentQ(currentQ + 1);
-            } else {
-                setShowResult(true);
-                onFinish(Math.round((newScore / questions.length) * 100));
+            if (showResult) {
+                return (
+                    <div className={`text-center p-12 rounded-3xl border animate-fade-in ${darkMode ? 'bg-[#10b981]/10 border-[#10b981]/30' : 'bg-[#10b981]/5 border-[#10b981]/20'}`}>
+                        <CheckCircle2 size={64} className="mx-auto text-[#10b981] mb-6" />
+                        <h3 className={`text-3xl font-bold mb-4 ${textColor}`}>{lang === 'en' ? "Quiz Completed!" : "測驗完成！"}</h3>
+                        <p className={`text-2xl mb-8 ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{lang === 'en' ? "Your Score" : "你的成績"}: <span className="text-[#10b981] font-bold">{Math.round((score / questions.length) * 100)}%</span></p>
+                        <button 
+                            onClick={reset}
+                            className="px-8 py-3 rounded-xl font-bold transition-all duration-200 bg-[#10b981] text-white shadow-lg shadow-[#10b981]/20 hover:bg-[#059669]"
+                        >
+                            {lang === 'en' ? "Retry" : "再試一次"}
+                        </button>
+                    </div>
+                );
             }
-        }, 1200);
-    };
 
-    const reset = () => {
-        setCurrentQ(0);
-        setScore(0);
-        setShowResult(false);
-    };
+            const q = questions[currentQ];
 
-    const cardBg = darkMode ? 'bg-slate-800/70 border-slate-700' : 'bg-white border-slate-200';
-    const textColor = darkMode ? 'text-white' : 'text-slate-900';
-    const subTextColor = darkMode ? 'text-slate-400' : 'text-slate-500';
-
-    if (showResult) {
-        return (
-            <div className={`text-center p-12 rounded-3xl border animate-fade-in ${darkMode ? 'bg-[#10b981]/10 border-[#10b981]/30' : 'bg-[#10b981]/5 border-[#10b981]/20'}`}>
-                <CheckCircle2 size={64} className="mx-auto text-[#10b981] mb-6" />
-                <h3 className={`text-3xl font-bold mb-4 ${textColor}`}>{lang === 'en' ? "Quiz Completed!" : "測驗完成！"}</h3>
-                <p className={`text-2xl mb-8 ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>{lang === 'en' ? "Your Score" : "你的成績"}: <span className="text-[#10b981] font-bold">{Math.round((score / questions.length) * 100)}%</span></p>
-                <button 
-                    onClick={reset}
-                    className="px-8 py-3 rounded-xl font-bold transition-all duration-200 bg-[#10b981] text-white shadow-lg shadow-[#10b981]/20 hover:bg-[#059669]"
-                >
-                    {lang === 'en' ? "Retry" : "再試一次"}
-                </button>
-            </div>
-        );
-    }
-
-    const q = questions[currentQ];
-
-    return (
-        <div className="max-w-3xl mx-auto mt-8">
-            <div className={`flex justify-between text-sm mb-6 font-medium uppercase tracking-wider ${subTextColor}`}>
-                <span>{lang === 'en' ? "Question" : "問題"} {currentQ + 1} / {questions.length}</span>
-                <span>Score: {score}</span>
-            </div>
-            <div className={`${cardBg} p-10 rounded-3xl min-h-[360px] flex flex-col justify-center relative overflow-hidden border shadow-xl`}>
-                {feedback !== null && (
-                    <div className={`absolute inset-0 flex items-center justify-center bg-opacity-95 z-20 backdrop-blur-sm transition-all duration-300 ${feedback ? 'bg-[#064e3b]' : 'bg-[#7f1d1d]'}`}>
-                        <div className="text-center animate-scale-in">
-                            <span className="text-5xl font-bold text-white block mb-2">{feedback ? "Correct!" : "Incorrect"}</span>
-                            <span className="text-3xl">{feedback ? "🎉" : "😔"}</span>
+            return (
+                <div className="max-w-3xl mx-auto mt-8">
+                    <div className={`flex justify-between text-sm mb-6 font-medium uppercase tracking-wider ${subTextColor}`}>
+                        <span>{lang === 'en' ? "Question" : "問題"} {currentQ + 1} / {questions.length}</span>
+                        <span>Score: {score}</span>
+                    </div>
+                    <div className={`${cardBg} p-10 rounded-3xl min-h-[360px] flex flex-col justify-center relative overflow-hidden border shadow-xl`}>
+                        {feedback !== null && (
+                            <div className={`absolute inset-0 flex items-center justify-center bg-opacity-95 z-20 backdrop-blur-sm transition-all duration-300 ${feedback ? 'bg-[#064e3b]' : 'bg-[#7f1d1d]'}`}>
+                                <div className="text-center animate-scale-in">
+                                    <span className="text-5xl font-bold text-white block mb-2">{feedback ? "Correct!" : "Incorrect"}</span>
+                                    <span className="text-3xl">{feedback ? "🎉" : "😔"}</span>
+                                </div>
+                            </div>
+                        )}
+                        <h4 className={`text-2xl font-medium mb-10 text-center leading-snug ${textColor}`}>{lang === 'en' ? q.q.en : q.q.zh}</h4>
+                        <div className="grid grid-cols-2 gap-6">
+                            <button onClick={() => handleAnswer(q.a === true)} className={`p-6 rounded-2xl font-bold transition-all text-lg hover:shadow-lg hover:scale-[1.02] ${darkMode ? 'bg-slate-700 text-white hover:bg-[#10b981]' : 'bg-slate-100 text-slate-800 hover:bg-[#10b981] hover:text-white'}`}>
+                                {lang === 'en' ? "True" : "正確"}
+                            </button>
+                            <button onClick={() => handleAnswer(q.a === false)} className={`p-6 rounded-2xl font-bold transition-all text-lg hover:shadow-lg hover:scale-[1.02] ${darkMode ? 'bg-slate-700 text-white hover:bg-red-500' : 'bg-slate-100 text-slate-800 hover:bg-red-500 hover:text-white'}`}>
+                                {lang === 'en' ? "False" : "錯誤"}
+                            </button>
                         </div>
                     </div>
-                )}
-                <h4 className={`text-2xl font-medium mb-10 text-center leading-snug ${textColor}`}>{lang === 'en' ? q.q.en : q.q.zh}</h4>
-                <div className="grid grid-cols-2 gap-6">
-                    <button onClick={() => handleAnswer(q.a === true)} className={`p-6 rounded-2xl font-bold transition-all text-lg hover:shadow-lg hover:scale-[1.02] ${darkMode ? 'bg-slate-700 text-white hover:bg-[#10b981]' : 'bg-slate-100 text-slate-800 hover:bg-[#10b981] hover:text-white'}`}>
-                        {lang === 'en' ? "True" : "正確"}
-                    </button>
-                    <button onClick={() => handleAnswer(q.a === false)} className={`p-6 rounded-2xl font-bold transition-all text-lg hover:shadow-lg hover:scale-[1.02] ${darkMode ? 'bg-slate-700 text-white hover:bg-red-500' : 'bg-slate-100 text-slate-800 hover:bg-red-500 hover:text-white'}`}>
-                        {lang === 'en' ? "False" : "錯誤"}
-                    </button>
                 </div>
-            </div>
-        </div>
-    );
-};
+            );
+        };
 
-const TopicView = ({ topic, lang, onQuizFinish, darkMode }) => {
-    const [tab, setTab] = useState('summary');
-    const [openGlossary, setOpenGlossary] = useState(null);
+        const TopicView = ({ topic, lang, onQuizFinish, darkMode }) => {
+            const [tab, setTab] = useState('summary');
+            const [openGlossary, setOpenGlossary] = useState(null);
 
-    // Tab Content
-    const renderContent = () => {
-        const textColor = darkMode ? 'text-slate-300' : 'text-slate-600';
-        const headingColor = darkMode ? 'text-white' : 'text-slate-900';
-        const glossaryBg = darkMode ? 'bg-slate-800/80 hover:bg-slate-800' : 'bg-white hover:bg-slate-50';
-        const glossaryBorder = darkMode ? 'border-slate-700' : 'border-slate-200';
-        const glossaryContentBg = darkMode ? 'bg-slate-900/50' : 'bg-slate-50';
+            // Tab Content
+            const renderContent = () => {
+                const textColor = darkMode ? 'text-slate-300' : 'text-slate-600';
+                const headingColor = darkMode ? 'text-white' : 'text-slate-900';
+                const glossaryBg = darkMode ? 'bg-slate-800/80 hover:bg-slate-800' : 'bg-white hover:bg-slate-50';
+                const glossaryBorder = darkMode ? 'border-slate-700' : 'border-slate-200';
+                const glossaryContentBg = darkMode ? 'bg-slate-900/50' : 'bg-slate-50';
 
-        switch(tab) {
-            case 'summary':
-                return (
-                    <div className="animate-fade-in space-y-8">
-                        <div className={`border-l-4 border-[#10b981] p-6 rounded-r-xl ${darkMode ? 'bg-[#10b981]/10' : 'bg-[#10b981]/5'}`}>
-                            <h4 className="font-bold text-[#10b981] mb-4 uppercase text-sm tracking-widest">{lang === 'en' ? "Executive Summary" : "執行摘要"}</h4>
-                            <div className={`space-y-6 ${textColor}`}>
-                                <div>
-                                    <h5 className={`font-bold text-base mb-3 flex items-center gap-2 ${headingColor}`}>
-                                        <Lightbulb size={18} className="text-[#10b981]" />
-                                        {lang === 'en' ? "Key Takeaways" : "重點摘要"}
-                                    </h5>
-                                    <ul className="space-y-3 pl-1">
-                                        {topic.summary.points.map((p, i) => (
-                                            <li key={i} className="flex gap-3 text-base leading-relaxed">
-                                                <span className="text-[#10b981] mt-1.5 w-1.5 h-1.5 bg-[#10b981] rounded-full shrink-0"></span>
-                                                <span>{lang === 'en' ? p.en : p.zh}</span>
+                switch(tab) {
+                    case 'summary':
+                        return (
+                            <div className="animate-fade-in space-y-8">
+                                <div className={`border-l-4 border-[#10b981] p-6 rounded-r-xl ${darkMode ? 'bg-[#10b981]/10' : 'bg-[#10b981]/5'}`}>
+                                    <h4 className="font-bold text-[#10b981] mb-4 uppercase text-sm tracking-widest">{lang === 'en' ? "Executive Summary" : "執行摘要"}</h4>
+                                    <div className={`space-y-6 ${textColor}`}>
+                                        <div>
+                                            <h5 className={`font-bold text-base mb-3 flex items-center gap-2 ${headingColor}`}>
+                                                <Lightbulb size={18} className="text-[#10b981]" />
+                                                {lang === 'en' ? "Key Takeaways" : "重點摘要"}
+                                            </h5>
+                                            <ul className="space-y-3 pl-1">
+                                                {topic.summary.points.map((p, i) => (
+                                                    <li key={i} className="flex gap-3 text-base leading-relaxed">
+                                                        <span className="text-[#10b981] mt-1.5 w-1.5 h-1.5 bg-[#10b981] rounded-full shrink-0"></span>
+                                                        <span>{lang === 'en' ? p.en : p.zh}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                        {topic.summary.prep && (
+                                            <div className={`pt-4 border-t ${darkMode ? 'border-[#10b981]/20' : 'border-slate-200'}`}>
+                                                <h5 className={`font-bold text-base mb-2 flex items-center gap-2 ${headingColor}`}>
+                                                    <BookOpen size={18} className="text-[#10b981]" />
+                                                    {lang === 'en' ? "Preparation" : "課前準備"}
+                                                </h5>
+                                                <p className={`text-sm italic pl-7 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{lang === 'en' ? topic.summary.prep.en : topic.summary.prep.zh}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="px-2">
+                                    <h4 className={`font-bold mb-4 flex items-center gap-2 text-lg ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>
+                                        <Target size={20} className="text-[#10b981]" />
+                                        {lang === 'en' ? "Learning Objectives" : "學習目標"}
+                                    </h4>
+                                    <ul className="space-y-3 pl-2">
+                                        {topic.summary.objectives.map((o, i) => (
+                                            <li key={i} className={`flex gap-3 ${textColor}`}>
+                                                <CheckCircle2 size={18} className="text-slate-500 mt-1 shrink-0" />
+                                                <span>{lang === 'en' ? o.en : o.zh}</span>
                                             </li>
                                         ))}
                                     </ul>
                                 </div>
-                                {topic.summary.prep && (
-                                    <div className={`pt-4 border-t ${darkMode ? 'border-[#10b981]/20' : 'border-slate-200'}`}>
-                                        <h5 className={`font-bold text-base mb-2 flex items-center gap-2 ${headingColor}`}>
-                                            <BookOpen size={18} className="text-[#10b981]" />
-                                            {lang === 'en' ? "Preparation" : "課前準備"}
-                                        </h5>
-                                        <p className={`text-sm italic pl-7 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{lang === 'en' ? topic.summary.prep.en : topic.summary.prep.zh}</p>
+                            </div>
+                        );
+                    case 'deepdive':
+                        return (
+                            <div className="space-y-8 animate-fade-in">
+                                {topic.content.map((block, i) => {
+                                    if (block.type === 'text') {
+                                        return <TTSPlayer key={i} textEn={block.en} textZh={block.zh} lang={lang} darkMode={darkMode} />;
+                                    } else if (block.type === 'glossary') {
+                                        return (
+                                            <div key={i} className={`border rounded-xl overflow-hidden shadow-sm ${glossaryBorder}`}>
+                                                <button 
+                                                    onClick={() => setOpenGlossary(openGlossary === i ? null : i)}
+                                                    className={`w-full flex items-center justify-between p-5 transition-colors ${glossaryBg}`}
+                                                >
+                                                    <span className="font-bold text-[#0ea5e9] text-lg">{lang === 'en' ? block.title.en : block.title.zh}</span>
+                                                    <ChevronDown className={`transition-transform duration-300 ${darkMode ? 'text-white' : 'text-slate-600'} ${openGlossary === i ? 'rotate-180' : ''}`} />
+                                                </button>
+                                                <div className={`transition-all duration-300 ease-in-out overflow-hidden ${openGlossary === i ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                                    <div className={`p-5 text-base leading-relaxed border-t ${glossaryContentBg} ${textColor} ${glossaryBorder}`}>
+                                                        {lang === 'en' ? block.desc.en : block.desc.zh}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                })}
+                                
+                                {/* Media Section */}
+                                {topic.media && topic.media.length > 0 && (
+                                    <div className={`mt-12 pt-8 border-t ${darkMode ? 'border-slate-700/50' : 'border-slate-200'}`}>
+                                        <h4 className={`font-bold mb-6 flex items-center gap-2 ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>
+                                            <Briefcase size={20} />
+                                            {lang === 'en' ? "Multimedia Cases & Resources" : "實務個案與影音資源"}
+                                        </h4>
+                                        <div className="flex gap-4 flex-wrap">
+                                            {topic.media.map((m, idx) => (
+                                                <a 
+                                                    key={idx}
+                                                    href={m.url} 
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className={`flex items-center gap-3 px-5 py-3 rounded-xl text-sm transition-all border group ${
+                                                        darkMode 
+                                                        ? 'bg-slate-800 border-slate-700 hover:border-[#10b981]/50 text-slate-300 hover:text-[#10b981]' 
+                                                        : 'bg-white border-slate-200 hover:border-[#10b981]/50 text-slate-700 hover:text-[#10b981] hover:shadow-md'
+                                                    }`}
+                                                >
+                                                    {m.type === 'video' ? <Video size={16} className="text-slate-500 group-hover:text-[#10b981]" /> : <Headphones size={16} className="text-slate-500 group-hover:text-[#10b981]" />}
+                                                    {lang === 'en' ? m.title.en : m.title.zh}
+                                                    <ExternalLink size={14} className="opacity-50 group-hover:opacity-100" />
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* Default Cases if no specific media */}
+                                {(!topic.media || topic.media.length === 0) && (
+                                    <div className={`mt-12 pt-8 border-t ${darkMode ? 'border-slate-700/50' : 'border-slate-200'}`}>
+                                        <h4 className={`font-bold mb-6 flex items-center gap-2 ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>
+                                            <Briefcase size={20} />
+                                            {lang === 'en' ? "Real World Cases" : "實務個案連結"}
+                                        </h4>
+                                        <div className="flex gap-4 flex-wrap">
+                                            <a href="#" className={`flex items-center gap-3 px-5 py-3 rounded-xl text-sm transition-all border group ${darkMode ? 'bg-slate-800 border-slate-700 hover:border-[#10b981]/50 text-slate-300 hover:text-[#10b981]' : 'bg-white border-slate-200 hover:border-[#10b981]/50 text-slate-700 hover:text-[#10b981]'}`}>
+                                                <ExternalLink size={16} className="text-slate-500 group-hover:text-[#10b981]" />
+                                                TSMC Strategy (HBR)
+                                            </a>
+                                        </div>
                                     </div>
                                 )}
                             </div>
-                        </div>
-                        <div className="px-2">
-                            <h4 className={`font-bold mb-4 flex items-center gap-2 text-lg ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>
-                                <Target size={20} className="text-[#10b981]" />
-                                {lang === 'en' ? "Learning Objectives" : "學習目標"}
-                            </h4>
-                            <ul className="space-y-3 pl-2">
-                                {topic.summary.objectives.map((o, i) => (
-                                    <li key={i} className={`flex gap-3 ${textColor}`}>
-                                        <CheckCircle2 size={18} className="text-slate-500 mt-1 shrink-0" />
-                                        <span>{lang === 'en' ? o.en : o.zh}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    </div>
-                );
-            case 'deepdive':
-                return (
-                    <div className="space-y-8 animate-fade-in">
-                        {topic.content.map((block, i) => {
-                            if (block.type === 'text') {
-                                return <TTSPlayer key={i} textEn={block.en} textZh={block.zh} lang={lang} darkMode={darkMode} />;
-                            } else if (block.type === 'glossary') {
-                                return (
-                                    <div key={i} className={`border rounded-xl overflow-hidden shadow-sm ${glossaryBorder}`}>
-                                        <button 
-                                            onClick={() => setOpenGlossary(openGlossary === i ? null : i)}
-                                            className={`w-full flex items-center justify-between p-5 transition-colors ${glossaryBg}`}
-                                        >
-                                            <span className="font-bold text-[#0ea5e9] text-lg">{lang === 'en' ? block.title.en : block.title.zh}</span>
-                                            <ChevronDown className={`transition-transform duration-300 ${darkMode ? 'text-white' : 'text-slate-600'} ${openGlossary === i ? 'rotate-180' : ''}`} />
-                                        </button>
-                                        <div className={`transition-all duration-300 ease-in-out overflow-hidden ${openGlossary === i ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
-                                            <div className={`p-5 text-base leading-relaxed border-t ${glossaryContentBg} ${textColor} ${glossaryBorder}`}>
-                                                {lang === 'en' ? block.desc.en : block.desc.zh}
+                        );
+                    case 'cards':
+                        return (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in">
+                                {topic.cards.map((card, i) => (
+                                    <div key={i} className="h-72 cursor-pointer group flip-card perspective-1000" onClick={(e) => {
+                                        const inner = e.currentTarget.querySelector('.flip-card-inner');
+                                        inner.style.transform = inner.style.transform === 'rotateY(180deg)' ? 'rotateY(0deg)' : 'rotateY(180deg)';
+                                    }}>
+                                        <div className="flip-card-inner relative w-full h-full text-center transition-transform duration-700 transform-style-3d">
+                                            <div className={`flip-card-front absolute w-full h-full backface-hidden border rounded-2xl flex flex-col items-center justify-center p-8 shadow-xl transition-colors ${darkMode ? 'bg-slate-800 border-slate-700 text-white group-hover:border-[#10b981]/50' : 'bg-white border-slate-200 text-slate-800 group-hover:border-[#10b981]/50'}`}>
+                                                <RotateCcw size={32} className="mb-6 text-[#10b981] opacity-60" />
+                                                <h3 className="text-2xl font-bold">{lang === 'en' ? card.front.en : card.front.zh}</h3>
+                                                <p className="text-xs text-slate-500 mt-6 uppercase tracking-widest font-bold">{lang === 'en' ? "Click to flip" : "點擊翻轉"}</p>
+                                            </div>
+                                            <div className="flip-card-back absolute w-full h-full backface-hidden bg-gradient-to-br from-[#064e3b] to-[#065f46] text-white border border-[#10b981] rounded-2xl flex flex-col items-center justify-center p-8 rotate-y-180 shadow-2xl">
+                                                <p className="text-xl leading-relaxed font-medium">{lang === 'en' ? card.back.en : card.back.zh}</p>
                                             </div>
                                         </div>
                                     </div>
-                                );
-                            }
-                            return null;
-                        })}
-                        
-                        {/* Media Section */}
-                        {topic.media && topic.media.length > 0 && (
-                            <div className={`mt-12 pt-8 border-t ${darkMode ? 'border-slate-700/50' : 'border-slate-200'}`}>
-                                <h4 className={`font-bold mb-6 flex items-center gap-2 ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>
-                                    <Briefcase size={20} />
-                                    {lang === 'en' ? "Multimedia Cases & Resources" : "實務個案與影音資源"}
-                                </h4>
-                                <div className="flex gap-4 flex-wrap">
-                                    {topic.media.map((m, idx) => (
-                                        <a 
-                                            key={idx}
-                                            href={m.url} 
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className={`flex items-center gap-3 px-5 py-3 rounded-xl text-sm transition-all border group ${
-                                                darkMode 
-                                                ? 'bg-slate-800 border-slate-700 hover:border-[#10b981]/50 text-slate-300 hover:text-[#10b981]' 
-                                                : 'bg-white border-slate-200 hover:border-[#10b981]/50 text-slate-700 hover:text-[#10b981] hover:shadow-md'
-                                            }`}
-                                        >
-                                            {m.type === 'video' ? <Video size={16} className="text-slate-500 group-hover:text-[#10b981]" /> : <Headphones size={16} className="text-slate-500 group-hover:text-[#10b981]" />}
-                                            {lang === 'en' ? m.title.en : m.title.zh}
-                                            <ExternalLink size={14} className="opacity-50 group-hover:opacity-100" />
-                                        </a>
-                                    ))}
-                                </div>
+                                ))}
                             </div>
-                        )}
-                        
-                        {/* Default Cases if no specific media */}
-                        {(!topic.media || topic.media.length === 0) && (
-                            <div className={`mt-12 pt-8 border-t ${darkMode ? 'border-slate-700/50' : 'border-slate-200'}`}>
-                                <h4 className={`font-bold mb-6 flex items-center gap-2 ${darkMode ? 'text-slate-200' : 'text-slate-800'}`}>
-                                    <Briefcase size={20} />
-                                    {lang === 'en' ? "Real World Cases" : "實務個案連結"}
-                                </h4>
-                                <div className="flex gap-4 flex-wrap">
-                                    <a href="#" className={`flex items-center gap-3 px-5 py-3 rounded-xl text-sm transition-all border group ${darkMode ? 'bg-slate-800 border-slate-700 hover:border-[#10b981]/50 text-slate-300 hover:text-[#10b981]' : 'bg-white border-slate-200 hover:border-[#10b981]/50 text-slate-700 hover:text-[#10b981]'}`}>
-                                        <ExternalLink size={16} className="text-slate-500 group-hover:text-[#10b981]" />
-                                        TSMC Strategy (HBR)
-                                    </a>
-                                </div>
-                            </div>
-                        )}
+                        );
+                    case 'quiz':
+                        return <Quiz questions={topic.quiz} lang={lang} onFinish={onQuizFinish} darkMode={darkMode} />;
+                    default: return null;
+                }
+            };
+
+            return (
+                <div className="max-w-4xl mx-auto pb-20">
+                    {/* Hero */}
+                    <div className="py-16 px-6 md:px-0 text-center">
+                        <div className="inline-flex p-4 rounded-full bg-[#10b981]/10 text-[#10b981] mb-6 ring-1 ring-[#10b981]/20">
+                            <topic.icon size={32} />
+                        </div>
+                        <h2 className={`text-3xl md:text-5xl font-bold mb-6 tracking-tight leading-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                            {lang === 'en' ? topic.title.en : topic.title.zh}
+                        </h2>
+                        <p className={`text-lg md:text-xl max-w-2xl mx-auto italic font-light leading-relaxed ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                            "{lang === 'en' ? topic.insight.en : topic.insight.zh}"
+                        </p>
                     </div>
-                );
-            case 'cards':
-                return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in">
-                        {topic.cards.map((card, i) => (
-                            <div key={i} className="h-72 cursor-pointer group flip-card perspective-1000" onClick={(e) => {
-                                const inner = e.currentTarget.querySelector('.flip-card-inner');
-                                inner.style.transform = inner.style.transform === 'rotateY(180deg)' ? 'rotateY(0deg)' : 'rotateY(180deg)';
-                            }}>
-                                <div className="flip-card-inner relative w-full h-full text-center transition-transform duration-700 transform-style-3d">
-                                    <div className={`flip-card-front absolute w-full h-full backface-hidden border rounded-2xl flex flex-col items-center justify-center p-8 shadow-xl transition-colors ${darkMode ? 'bg-slate-800 border-slate-700 text-white group-hover:border-[#10b981]/50' : 'bg-white border-slate-200 text-slate-800 group-hover:border-[#10b981]/50'}`}>
-                                        <RotateCcw size={32} className="mb-6 text-[#10b981] opacity-60" />
-                                        <h3 className="text-2xl font-bold">{lang === 'en' ? card.front.en : card.front.zh}</h3>
-                                        <p className="text-xs text-slate-500 mt-6 uppercase tracking-widest font-bold">{lang === 'en' ? "Click to flip" : "點擊翻轉"}</p>
-                                    </div>
-                                    <div className="flip-card-back absolute w-full h-full backface-hidden bg-gradient-to-br from-[#064e3b] to-[#065f46] text-white border border-[#10b981] rounded-2xl flex flex-col items-center justify-center p-8 rotate-y-180 shadow-2xl">
-                                        <p className="text-xl leading-relaxed font-medium">{lang === 'en' ? card.back.en : card.back.zh}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+
+                    {/* Sticky Tabs */}
+                    <div className={`sticky top-0 z-30 backdrop-blur-md py-4 border-b mb-8 transition-all ${darkMode ? 'bg-[#0f172a]/95 border-slate-800' : 'bg-slate-50/95 border-slate-200'}`}>
+                        <div className="flex justify-center gap-2 overflow-x-auto pb-1 px-4 md:px-0 scrollbar-hide">
+                            {[
+                                {id: 'summary', label: {en: 'Overview', zh: '課程總覽'}, icon: BookOpen},
+                                {id: 'deepdive', label: {en: 'Deep Dive', zh: '深入學習'}, icon: Layers},
+                                {id: 'cards', label: {en: 'Cards', zh: '翻轉卡'}, icon: RotateCcw},
+                                {id: 'quiz', label: {en: 'Quiz', zh: '隨堂測驗'}, icon: CheckCircle2},
+                            ].map((t) => (
+                                <button
+                                    key={t.id}
+                                    onClick={() => setTab(t.id)}
+                                    className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all whitespace-nowrap ${
+                                        tab === t.id 
+                                        ? 'bg-[#10b981] text-white shadow-lg shadow-[#10b981]/20 transform scale-105' 
+                                        : (darkMode ? 'bg-slate-800/50 text-slate-400 hover:bg-slate-800 hover:text-white' : 'bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-transparent hover:border-slate-200')
+                                    }`}
+                                >
+                                    <t.icon size={16} />
+                                    {lang === 'en' ? t.label.en : t.label.zh}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                );
-            case 'quiz':
-                return <Quiz questions={topic.quiz} lang={lang} onFinish={onQuizFinish} darkMode={darkMode} />;
-            default: return null;
-        }
-    };
 
-    return (
-        <div className="max-w-4xl mx-auto pb-20">
-            {/* Hero */}
-            <div className="py-16 px-6 md:px-0 text-center">
-                <div className="inline-flex p-4 rounded-full bg-[#10b981]/10 text-[#10b981] mb-6 ring-1 ring-[#10b981]/20">
-                    <topic.icon size={32} />
+                    {/* Content Area */}
+                    <div className="px-6 md:px-0 min-h-[400px]">
+                        {renderContent()}
+                    </div>
                 </div>
-                <h2 className={`text-3xl md:text-5xl font-bold mb-6 tracking-tight leading-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-                    {lang === 'en' ? topic.title.en : topic.title.zh}
-                </h2>
-                <p className={`text-lg md:text-xl max-w-2xl mx-auto italic font-light leading-relaxed ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                    "{lang === 'en' ? topic.insight.en : topic.insight.zh}"
-                </p>
-            </div>
-
-            {/* Sticky Tabs */}
-            <div className={`sticky top-0 z-30 backdrop-blur-md py-4 border-b mb-8 transition-all ${darkMode ? 'bg-[#0f172a]/95 border-slate-800' : 'bg-slate-50/95 border-slate-200'}`}>
-                <div className="flex justify-center gap-2 overflow-x-auto pb-1 px-4 md:px-0 scrollbar-hide">
-                    {[
-                        {id: 'summary', label: {en: 'Overview', zh: '課程總覽'}, icon: BookOpen},
-                        {id: 'deepdive', label: {en: 'Deep Dive', zh: '深入學習'}, icon: Layers},
-                        {id: 'cards', label: {en: 'Cards', zh: '翻轉卡'}, icon: RotateCcw},
-                        {id: 'quiz', label: {en: 'Quiz', zh: '隨堂測驗'}, icon: CheckCircle2},
-                    ].map((t) => (
-                        <button
-                            key={t.id}
-                            onClick={() => setTab(t.id)}
-                            className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold transition-all whitespace-nowrap ${
-                                tab === t.id 
-                                ? 'bg-[#10b981] text-white shadow-lg shadow-[#10b981]/20 transform scale-105' 
-                                : (darkMode ? 'bg-slate-800/50 text-slate-400 hover:bg-slate-800 hover:text-white' : 'bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-transparent hover:border-slate-200')
-                            }`}
-                        >
-                            <t.icon size={16} />
-                            {lang === 'en' ? t.label.en : t.label.zh}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Content Area */}
-            <div className="px-6 md:px-0 min-h-[400px]">
-                {renderContent()}
-            </div>
-        </div>
-    );
-};
-
-const Footer = ({ lang, darkMode }) => (
-    <footer className={`border-t py-12 text-center text-sm mt-auto ${darkMode ? 'border-slate-800 bg-[#0f172a] text-slate-500' : 'border-slate-200 bg-white text-slate-600'}`}>
-        <div className="max-w-4xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="text-left">
-                <p className={`font-bold mb-1 ${darkMode ? 'text-slate-400' : 'text-slate-700'}`}>© 2024 SMMC Learning Platform. v1.2.0</p>
-                <div className="text-xs opacity-60 flex flex-col gap-1">
-                    <a href="https://www.ncnu.edu.tw/" target="_blank" rel="noreferrer" className="hover:text-[#10b981] transition-colors">National Chi Nan University</a>
-                    <span>國際策略管理</span>
-                </div>
-                <p className="text-[10px] opacity-50 mt-1">SMMC - Strategic Management of Multinational Corporations</p>
-            </div>
-            <div className="flex flex-col items-center md:items-end">
-                <p className={`font-bold text-base ${darkMode ? 'text-slate-300' : 'text-slate-800'}`}>Prof. Shihmin Lo</p>
-                <a 
-                    href="https://www.ibs.ncnu.edu.tw/index.php/faculty/tenured-professor/299-smlo" 
-                    target="_blank" 
-                    className="text-[#10b981] hover:text-[#34d399] hover:underline text-xs flex items-center gap-1 mt-1 transition-colors"
-                >
-                    Faculty Profile <ExternalLink size={10} />
-                </a>
-            </div>
-        </div>
-    </footer>
-);
-
-// --- 5. Main App ---
-
-export default function App() {
-    const [currentTopicId, setCurrentTopicId] = useState('topic1');
-    const [sidebarOpen, setSidebarOpen] = useState(true); // Open by default on desktop
-    const [dashboardOpen, setDashboardOpen] = useState(false);
-    const [lang, setLang] = useState('en');
-    const [darkMode, setDarkMode] = useState(true);
-    const mainRef = useRef(null);
-    
-    // Learning State
-    const [progress, setProgress] = useState(Array(COURSE_DATA.length).fill(false));
-    const [scores, setScores] = useState(Array(COURSE_DATA.length).fill(0));
-
-    const toggleTheme = () => {
-        setDarkMode(!darkMode);
-    };
-
-    const handleQuizFinish = (score) => {
-        const topicIndex = COURSE_DATA.findIndex(t => t.id === currentTopicId);
-        const newScores = [...scores];
-        const newProgress = [...progress];
-        newScores[topicIndex] = score;
-        newProgress[topicIndex] = true; 
-        setScores(newScores);
-        setProgress(newProgress);
-    };
-
-    const currentTopic = COURSE_DATA.find(t => t.id === currentTopicId);
-
-    // Scroll to top handler
-    const scrollToTop = () => {
-        if (mainRef.current) {
-            mainRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    };
-
-    // Responsive Sidebar Check
-    useEffect(() => {
-        const handleResize = () => {
-            if (window.innerWidth < 1024) setSidebarOpen(false);
-            else setSidebarOpen(true);
+            );
         };
-        window.addEventListener('resize', handleResize);
-        handleResize();
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
 
-    const appBg = darkMode ? 'bg-[#0f172a] text-slate-200' : 'bg-slate-50 text-slate-900';
+        const Footer = ({ lang, darkMode }) => (
+            <footer className={`border-t py-12 text-center text-sm mt-auto ${darkMode ? 'border-slate-800 bg-[#0f172a] text-slate-500' : 'border-slate-200 bg-white text-slate-600'}`}>
+                <div className="max-w-4xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div className="text-left">
+                        <p className={`font-bold mb-1 ${darkMode ? 'text-slate-400' : 'text-slate-700'}`}>© 2024 SMMC Learning Platform. v1.4.0</p>
+                        <div className="text-xs opacity-60 flex flex-col gap-1">
+                            <a href="https://www.ncnu.edu.tw/" target="_blank" rel="noreferrer" className="hover:text-[#10b981] transition-colors">National Chi Nan University</a>
+                            <span>國際策略管理</span>
+                        </div>
+                        <p className="text-[10px] opacity-50 mt-1">SMMC - Strategic Management of Multinational Corporations</p>
+                    </div>
+                    <div className="flex flex-col items-center md:items-end">
+                        <a 
+                            href="https://www.ibs.ncnu.edu.tw/index.php/faculty/tenured-professor/299-smlo" 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className={`font-bold text-base hover:text-[#10b981] transition-colors flex items-center gap-2 ${darkMode ? 'text-slate-300' : 'text-slate-800'}`}
+                        >
+                            Prof. Shihmin Lo
+                            <ExternalLink size={14} />
+                        </a>
+                    </div>
+                </div>
+            </footer>
+        );
 
-    return (
-        <div className={`min-h-screen flex flex-col font-sans selection:bg-[#10b981] selection:text-white ${appBg}`}>
-            {/* Global Style Injection */}
-            <style>{`
-                .perspective-1000 { perspective: 1000px; }
-                .transform-style-3d { transform-style: preserve-3d; }
-                .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-                .rotate-y-180 { transform: rotateY(180deg); }
-                .scrollbar-hide::-webkit-scrollbar { display: none; }
-                .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-                html { scroll-behavior: smooth; }
-                
-                @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-                .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
-                
-                @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-                .animate-fade-in-up { animation: fade-in-up 0.4s ease-out forwards; }
-                
-                @keyframes scale-in { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-                .animate-scale-in { animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-            `}</style>
-
-            <Header 
-                darkMode={darkMode} 
-                toggleTheme={toggleTheme} 
-                lang={lang} 
-                toggleLang={() => setLang(lang === 'en' ? 'zh' : 'en')}
-                toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-                toggleDashboard={() => setDashboardOpen(!dashboardOpen)}
-                dashboardOpen={dashboardOpen}
-                scrollToTop={scrollToTop}
-            />
+        // --- Main App ---
+        function App() {
+            const [currentTopicId, setCurrentTopicId] = useState('topic1');
+            const [sidebarOpen, setSidebarOpen] = useState(true);
+            const [dashboardOpen, setDashboardOpen] = useState(false);
+            const [lang, setLang] = useState('en');
+            const [darkMode, setDarkMode] = useState(true);
+            const mainRef = useRef(null);
             
-            <div className="flex flex-1 pt-0 relative overflow-hidden">
-                <Sidebar 
-                    isOpen={sidebarOpen} 
-                    close={() => setSidebarOpen(false)}
-                    currentTopic={currentTopicId}
-                    setTopic={(id) => { 
-                        setCurrentTopicId(id); 
-                        setDashboardOpen(false);
-                        // Reset scroll when changing topic
-                        if(mainRef.current) mainRef.current.scrollTop = 0;
-                    }}
-                    topics={COURSE_DATA}
-                    lang={lang}
-                    darkMode={darkMode}
-                />
-                
-                <main 
-                    ref={mainRef}
-                    className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'lg:ml-72' : ''} ${darkMode ? 'bg-[#0f172a]' : 'bg-slate-50'} overflow-y-auto h-[calc(100vh-60px)] scroll-smooth`}
-                >
-                    <TopicView 
-                        topic={currentTopic} 
+            const [progress, setProgress] = useState(Array(COURSE_DATA.length).fill(false));
+            const [scores, setScores] = useState(Array(COURSE_DATA.length).fill(0));
+
+            const toggleTheme = () => {
+                setDarkMode(!darkMode);
+            };
+
+            const handleQuizFinish = (score) => {
+                const topicIndex = COURSE_DATA.findIndex(t => t.id === currentTopicId);
+                const newScores = [...scores];
+                const newProgress = [...progress];
+                newScores[topicIndex] = score;
+                newProgress[topicIndex] = true; 
+                setScores(newScores);
+                setProgress(newProgress);
+            };
+
+            const currentTopic = COURSE_DATA.find(t => t.id === currentTopicId);
+
+            const scrollToTop = () => {
+                if (mainRef.current) {
+                    mainRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            };
+
+            useEffect(() => {
+                const handleResize = () => {
+                    if (window.innerWidth < 1024) setSidebarOpen(false);
+                    else setSidebarOpen(true);
+                };
+                window.addEventListener('resize', handleResize);
+                handleResize();
+                return () => window.removeEventListener('resize', handleResize);
+            }, []);
+
+            const appBg = darkMode ? 'bg-[#0f172a] text-slate-200' : 'bg-slate-50 text-slate-900';
+
+            return (
+                <div className={`min-h-screen flex flex-col font-sans selection:bg-[#10b981] selection:text-white ${appBg}`}>
+                    <Header 
+                        darkMode={darkMode} 
+                        toggleTheme={toggleTheme} 
                         lang={lang} 
-                        onQuizFinish={handleQuizFinish}
-                        darkMode={darkMode}
+                        toggleLang={() => setLang(lang === 'en' ? 'zh' : 'en')}
+                        toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+                        toggleDashboard={() => setDashboardOpen(!dashboardOpen)}
+                        dashboardOpen={dashboardOpen}
+                        scrollToTop={scrollToTop}
                     />
                     
-                    <Footer lang={lang} darkMode={darkMode} />
-                </main>
+                    <div className="flex flex-1 pt-0 relative overflow-hidden">
+                        <Sidebar 
+                            isOpen={sidebarOpen} 
+                            close={() => setSidebarOpen(false)}
+                            currentTopic={currentTopicId}
+                            setTopic={(id) => { 
+                                setCurrentTopicId(id); 
+                                setDashboardOpen(false);
+                                if(mainRef.current) mainRef.current.scrollTop = 0;
+                            }}
+                            topics={COURSE_DATA}
+                            lang={lang}
+                            darkMode={darkMode}
+                        />
+                        
+                        <main 
+                            ref={mainRef}
+                            className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'lg:ml-72' : ''} ${darkMode ? 'bg-[#0f172a]' : 'bg-slate-50'} overflow-y-auto h-[calc(100vh-60px)] scroll-smooth`}
+                        >
+                            <TopicView 
+                                topic={currentTopic} 
+                                lang={lang} 
+                                onQuizFinish={handleQuizFinish}
+                                darkMode={darkMode}
+                            />
+                            
+                            <Footer lang={lang} darkMode={darkMode} />
+                        </main>
 
-                {/* Dashboard Overlay */}
-                {dashboardOpen && (
-                    <Dashboard 
-                        lang={lang} 
-                        progress={progress} 
-                        scores={scores} 
-                        onClose={() => setDashboardOpen(false)}
-                        darkMode={darkMode}
-                    />
-                )}
-            </div>
+                        {dashboardOpen && (
+                            <Dashboard 
+                                lang={lang} 
+                                progress={progress} 
+                                scores={scores} 
+                                onClose={() => setDashboardOpen(false)}
+                                darkMode={darkMode}
+                            />
+                        )}
+                    </div>
 
-            <AITutor lang={lang} darkMode={darkMode} />
-        </div>
-    );
-}
+                    <AITutor lang={lang} darkMode={darkMode} />
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
